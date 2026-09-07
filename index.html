@@ -9,13 +9,22 @@
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css"/>
   <script src="vendor/leaflet/leaflet.js"></script>
   <script src="coordinate-core.js"></script>
+  <script src="node-groups.js"></script>
   <script src="simulator-adapters.js"></script>
   <script src="propagation-profiles.js"></script>
   <script src="propagation-adapters.js"></script>
   <script src="cooja-csc-pathloss-writer.js"></script>
+  <script src="cooja-csc-position-writer.js"></script>
   <style>
     html, body { margin: 0; height: 100%; overflow: hidden; font-family: Arial, sans-serif; }
     #container { display: flex; height: 100%; }
+    #nodeGroupsPanel { width: 210px; flex: 0 0 210px; box-sizing: border-box; padding: 12px; overflow-y: auto; background: #f7f9fc; border-right: 1px solid #ccd5df; }
+    #nodeGroupsPanel input, #nodeGroupsPanel select { box-sizing: border-box; width: 100%; margin: 6px 0; padding: 6px; }
+    #nodeGroupList { display: flex; flex-direction: column; gap: 7px; margin: 12px 0; }
+    .node-group-item { text-align: left; overflow-wrap: anywhere; background: white; border: 1px solid #ccd5df; border-radius: 4px; }
+    .node-group-item.active { border: 2px solid #007bff; background: #eaf3ff; }
+    .node-group-item small { display: block; margin-top: 4px; color: #555; }
+    .toggle-button:disabled { cursor: default; opacity: .45; }
     #stage { position: relative; flex: 1; overflow: hidden; }
     #map { position: absolute; inset: 0; z-index: 0; }
     canvas#grid { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
@@ -29,8 +38,8 @@
     #customOriginControls label { width: 95px; }
     #customOriginControls input { width: 185px; }
     #controls input, #controls select { width: 200px; }
-    .output-container { display: flex; flex-direction: column; flex: 0 0 auto; height: 250px; }
-    #output { flex: 1; overflow-y: scroll; font-family: monospace; white-space: pre; border: 1px solid #ccc; padding: 5px; min-height: 0; }
+    .output-container { display: flex; flex-direction: column; flex: 0 0 auto; }
+    #output { flex: 0 0 160px; overflow-y: scroll; font-family: monospace; white-space: pre; border: 1px solid #ccc; padding: 5px; min-height: 0; }
     .output-header { display: flex; align-items: center; gap: 8px; }
     .output-header label { margin: 0; }
     .input-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -124,6 +133,10 @@
       border-bottom: 2px solid #e0e0e0;
     }
     
+    #closeShortcutsBtn { border: none; background: transparent; color: #555; font-size: 28px; line-height: 1; padding: 4px 8px; cursor: pointer; border-radius: 4px; }
+    #closeShortcutsBtn:hover { background: #e9ecef; color: #111; }
+    #closeShortcutsBtn:focus-visible { outline: 2px solid #007bff; outline-offset: 2px; }
+
     .shortcuts-header h1 {
       font-size: 24px;
       font-weight: 600;
@@ -219,6 +232,7 @@
     <div class="shortcuts-container">
       <div class="shortcuts-header">
         <h1>Keyboard Shortcuts</h1>
+        <button id="closeShortcutsBtn" type="button" aria-label="Close keyboard shortcuts" title="Close (Esc)">×</button>
       </div>
       
       <div class="shortcuts-grid">
@@ -239,17 +253,15 @@
             </div>
           </div>
           <div class="shortcut-item">
-            <span class="shortcut-description">Multiple Selection</span>
+            <span class="shortcut-description">Toggle Node Selection</span>
             <div class="shortcut-keys">
-              <span class="key">Ctrl</span>
-              <span class="key plus">+</span>
               <span class="key">Shift</span>
               <span class="key plus">+</span>
               <span class="key">Click</span>
             </div>
           </div>
           <div class="shortcut-item">
-            <span class="shortcut-description">One Selection</span>
+            <span class="shortcut-description">Select Node</span>
             <div class="shortcut-keys">
               <span class="key">Click</span>
             </div>
@@ -302,6 +314,17 @@
   </div>
 
   <div id="container">
+    <aside id="nodeGroupsPanel" aria-label="Node Groups">
+      <strong>Node Groups</strong>
+      <div id="nodeGroupList"></div>
+      <label for="nodeGroupName">Selected group name</label>
+      <input id="nodeGroupName" type="text" maxlength="100">
+      <label for="newNodeGroupType">New group type</label>
+      <select id="newNodeGroupType"><option value="fixed">Static</option><option value="mobile">Mobile</option></select>
+      <button id="addNodeGroupBtn" type="button">Add group</button>
+      <button id="deleteNodeGroupBtn" type="button" style="margin-top:8px">Delete selected group</button>
+      <p class="hint">Edit the selected group. Cooja Convert includes all groups with a shared origin. Other simulators export the selected group.</p>
+    </aside>
     <div id="stage">
       <div id="map" aria-label="OpenStreetMap"></div>
       <canvas id="grid"></canvas>
@@ -371,11 +394,11 @@
         </div>
         <label for="circleRadiusSelect">Circle Radius:</label>
         <select id="circleRadiusSelect">
-          <option value="10" selected>10m</option>
+          <option value="10">10m</option>
           <option value="20">20m</option>
           <option value="30">30m</option>
           <option value="40">40m</option>
-          <option value="50">50m</option>
+          <option value="50" selected>50m</option>
           <option value="custom">Custom</option>
         </select>
         <div id="customRadiusControls" style="display:none;">
@@ -445,6 +468,15 @@
             <select id="propagationProfileSelect" aria-describedby="propagationProfileSummary"></select>
           </label>
         </div>
+        <div class="propagation-selector-grid">
+          <label for="propagationRangeInput">TX Range (m)
+            <input id="propagationRangeInput" type="number" min="0.001" step="any" value="10">
+          </label>
+          <label for="propagationInterferenceRangeInput">INT Range (m)
+            <input id="propagationInterferenceRangeInput" type="number" min="0.001" step="any" value="20" aria-describedby="interferenceRangeHint">
+          </label>
+        </div>
+        <div class="hint" id="interferenceRangeHint">TX defaults to Circle Radius; INT defaults to twice TX. INT is a planning value: Cooja LogisticLoss has no separate interference-range setting.</div>
         <div class="propagation-evidence-card">
           <div id="propagationProfileSummary" class="hint"></div>
           <dl class="propagation-evidence-grid">
@@ -458,9 +490,6 @@
         <details>
           <summary>Cooja LogisticLoss parameters</summary>
           <div class="propagation-advanced-grid">
-            <label for="propagationRangeInput">Transmitting range (m)
-              <input id="propagationRangeInput" type="number" min="0.001" step="any" value="50">
-            </label>
             <label for="propagationSuccessRatioInput">TX success ratio
               <input id="propagationSuccessRatioInput" type="number" min="0" max="1" step="0.01" value="1">
             </label>
@@ -486,16 +515,17 @@
               <input id="propagationSeedInput" type="number" step="1" value="123456">
             </label>
           </div>
-          <div class="hint">Except for the selected cited path-loss exponent and the requested 50 m range, the radio-medium values start from Cooja LogisticLoss defaults. The cited spatial variation is not copied into <code>awgn_sigma</code>; Cooja's default remains 3 dB. The separate simulation-level <code>randomseed</code> starts at 123456 and belongs outside <code>radiomedium</code>.</div>
+          <div class="hint">Except for the selected cited path-loss exponent and the TX Range initialized from Circle Radius, the radio-medium values start from Cooja LogisticLoss defaults. The cited spatial variation is not copied into <code>awgn_sigma</code>; Cooja's default remains 3 dB. The separate simulation-level <code>randomseed</code> starts at 123456 and belongs outside <code>radiomedium</code>.</div>
         </details>
         <div id="propagationProfileStatus" class="hint" role="status" style="margin-top:6px;"></div>
         <div id="propagationMappingStatus" class="hint" role="status" style="margin-top:6px; padding:6px; border:1px solid #b9c8dc; border-radius:4px;"></div>
-        <label for="coojaCscFileInput" style="display:block; margin-top:9px;"><b>Existing Cooja simulation file</b></label>
-        <input id="coojaCscFileInput" type="file" accept=".csc,application/xml,text/xml" style="box-sizing:border-box; width:100%; margin-top:5px;">
+        <label for="chooseCoojaCscBtn" style="display:block; margin-top:9px;"><b>Existing Cooja simulation file</b></label>
+        <button id="chooseCoojaCscBtn" type="button" style="margin-top:5px;">Choose .csc file</button>
+        <input id="coojaCscFileInput" type="file" accept=".csc,application/xml,text/xml" hidden>
         <div id="coojaCscFileStatus" class="hint" role="status" style="margin-top:5px;">No .csc file selected.</div>
         <button id="writeCoojaCscBtn" type="button" style="margin-top:8px; width:100%;" disabled>Write to Cooja Simulation File</button>
-        <div class="hint" style="margin-top:5px;">Node placement remains separate: save <code>positions.dat</code> above and load it through the researcher's existing Cooja Mobility plugin. This writer never adds, removes, or repositions motes.</div>
-        <div class="hint" style="margin-top:5px;">The selected simulation's mote types, firmware, node positions, Mobility configuration, scripts, and other plugins are preserved. Its radio medium is replaced with LogisticLoss and its simulation-level <code>randomseed</code> is updated. Browser security prevents silent overwrite, so the result is downloaded as <code>*-pathloss.csc</code>.</div>
+        <div class="hint" style="margin-top:5px;">This button updates only path-loss settings. For static node positions, use Convert and Save export above; mobile routes use <code>positions.dat</code>.</div>
+        <div class="hint" style="margin-top:5px;">The selected simulation's mote types, firmware, node positions, Mobility configuration, scripts, and other plugins are preserved. Its radio medium is replaced with LogisticLoss and its simulation-level <code>randomseed</code> is updated. Supported browsers update the selected file after you grant write access. Other browsers download a <code>*-pathloss.csc</code> copy.</div>
         </div>
       </div>
     </div>
@@ -537,6 +567,7 @@
     const propagationEnvironmentSelect = document.getElementById('propagationEnvironmentSelect');
     const propagationProfileSelect = document.getElementById('propagationProfileSelect');
     const propagationRangeInput = document.getElementById('propagationRangeInput');
+    const propagationInterferenceRangeInput = document.getElementById('propagationInterferenceRangeInput');
     const propagationSuccessRatioInput = document.getElementById('propagationSuccessRatioInput');
     const propagationRxSensitivityInput = document.getElementById('propagationRxSensitivityInput');
     const propagationRssiInflectionInput = document.getElementById('propagationRssiInflectionInput');
@@ -689,6 +720,9 @@
       origin: { mode: 'first', lat: null, lng: null, alt: 0 },
       waypoints: []
     };
+    let nodeGroups = [{id:'initial',name:'Mobile 1',type:'mobile',points:[]}];
+    let activeNodeGroupId = 'initial';
+    let switchingNodeGroup = false;
     let positions = scenarioModel.waypoints; // { nodeId, time, lat, lng, z, timeGenerated }
     let selectedCoojaCsc = null;
     let selected = new Set();
@@ -834,17 +868,27 @@
 
     // Undo/Redo
     const undoStack = []; const redoStack = [];
-    const snapshot = () => JSON.parse(JSON.stringify({ positions, scenario, origin: scenarioModel.origin }));
+    const snapshot = () => { syncActiveNodeGroup(); return JSON.parse(JSON.stringify({ positions, scenario, origin: scenarioModel.origin, nodeGroups, activeNodeGroupId })); };
     function commitHistory(state = snapshot()){ undoStack.push(JSON.parse(JSON.stringify(state))); if (undoStack.length>200) undoStack.shift(); redoStack.length=0; }
     function restore(state){
-      setPositions(JSON.parse(JSON.stringify(state.positions || [])));
-      scenario = state.scenario || scenario;
+      if (state.nodeGroups?.length) { nodeGroups = JSON.parse(JSON.stringify(state.nodeGroups)); activeNodeGroupId = state.activeNodeGroupId; }
+      else { nodeGroups = [{id:'initial',name:state.scenario === 'fixed' ? 'Static 1':'Mobile 1',type:state.scenario || 'mobile',points:state.positions || []}]; activeNodeGroupId = 'initial'; }
+
+      setPositions(JSON.parse(JSON.stringify(nodeGroups.find(g=>g.id===activeNodeGroupId)?.points || state.positions || [])));
+      scenario = nodeGroups.find(g=>g.id===activeNodeGroupId)?.type || state.scenario || scenario;
       scenarioModel.scenario = scenario;
       scenarioMobileBtn.classList.toggle('active', scenario === 'mobile');
       scenarioFixedBtn.classList.toggle('active', scenario === 'fixed');
       if (state.origin && state.origin.mode === 'custom') setCustomOrigin(state.origin);
       else { originModeSelect.value = 'first'; renderOriginUi(); }
       refreshLatLngInput();
+      const restoredGroup=nodeGroups.find(g=>g.id===activeNodeGroupId);
+      if(typeof restoredGroup?.draft==='string')latlngInput.value=restoredGroup.draft;
+      if(restoredGroup?.interval)intervalInput.value=restoredGroup.interval;
+      renderNodeGroups();
+      updatePolygonMobileControlsVisibility();
+      selected.clear(); lastClickedIndex=-1;
+      restoreGroupPolygons();
       draw();
       updateOutput();
     }
@@ -932,8 +976,8 @@
       return best;
     }
 
-    function hitTestNodeMap(px, py){ const r = nodeRadiusPx();
-      for (let i=positions.length-1;i>=0;--i){ const p=positions[i]; const pt = map.latLngToContainerPoint([p.lat, p.lng]); const dx=pt.x-px, dy=pt.y-py; if (Math.hypot(dx,dy)<=r) return i; }
+    function hitTestNodeMap(px, py){
+      for (let i=positions.length-1;i>=0;--i){ const p=positions[i]; const pt = map.latLngToContainerPoint([p.lat, p.lng]); const dx=pt.x-px, dy=pt.y-py; const digits=String(p.nodeId || i+1).length; const r=10 + Math.min(3, Math.max(0, digits-2))*4; if (Math.hypot(dx,dy)<=r+3) return i; }
       return -1; }
 
     // === Polygon Mode (Fixed only) ===
@@ -942,6 +986,68 @@
     let polygonPreview = null;
     let deployedPolygons = []; // array of Leaflet polygon layers (persist on map)
     let mobileScanDirection = 'horizontal'; // 'horizontal' | 'vertical'
+
+    function syncActiveNodeGroup() {
+      const group = nodeGroups.find(g => g.id === activeNodeGroupId);
+      if (!group) return;
+      group.points = positions.map(p => ({...p}));
+      group.draft = latlngInput.value;
+      if (group.draft.trim() !== formatWaypointRows().trim()) {
+        try { group.points = window.Field2SimNodeGroups.parseRows(group.draft,group.type); } catch (_) { /* Keep invalid draft for correction; export will explain the error. */ }
+      }
+      group.interval = intervalInput.value;
+      group.polygons = deployedPolygons.map(p => p.getLatLngs().map(r => r.map(ll => ({lat:ll.lat,lng:ll.lng}))));
+    }
+    function restoreGroupPolygons() {
+      deployedPolygons.forEach(p => map.removeLayer(p)); deployedPolygons = [];
+      const group = nodeGroups.find(g => g.id === activeNodeGroupId);
+      for (const polygon of group?.polygons || []) deployedPolygons.push(L.polygon(polygon,{color:POLYGON_STROKE,weight:2,fillOpacity:.06}).addTo(map));
+    }
+    function renderNodeGroups() {
+      const list = document.getElementById('nodeGroupList'); list.replaceChildren();
+      for (const group of nodeGroups) {
+        const button = document.createElement('button'); button.type='button';
+        button.className='node-group-item'+(group.id===activeNodeGroupId?' active':'');
+        button.dataset.groupId=group.id; button.textContent=group.name;
+        const info=document.createElement('small'); info.textContent=`${group.type==='fixed'?'Static':'Mobile'} · ${(group.id===activeNodeGroupId?positions:group.points).length} ${group.type==='fixed'?'nodes':'waypoints'}`;
+        button.append(info); button.addEventListener('click',()=>selectNodeGroup(group.id));list.append(button);
+      }
+      const group=nodeGroups.find(g=>g.id===activeNodeGroupId);
+      document.getElementById('nodeGroupName').value=group?.name || '';
+      scenarioMobileBtn.disabled=group?.type!=='mobile';scenarioFixedBtn.disabled=group?.type!=='fixed';
+      scenarioMobileBtn.classList.toggle('active',group?.type==='mobile');scenarioFixedBtn.classList.toggle('active',group?.type==='fixed');
+    }
+    function selectNodeGroup(id) {
+      if (id===activeNodeGroupId) return;
+      syncActiveNodeGroup(); clearTimeout(latlngInputTimeout);
+      activeNodeGroupId=id;const group=nodeGroups.find(g=>g.id===id);
+      if(!group)return;
+      selected.clear();lastClickedIndex=-1;clearPolygonDraft();
+      setPositions(group.points);scenario=group.type;scenarioModel.scenario=scenario;
+      switchingNodeGroup=true;updateScenario(group.type);switchingNodeGroup=false;
+      if(group.interval)intervalInput.value=group.interval;
+      nodeInput.value=String(group.points[0]?.nodeId || nextAvailableNodeId());
+      latlngInput.value=group.draft ?? formatWaypointRows();
+      restoreGroupPolygons();renderNodeGroups();draw();updateOutput();
+    }
+    function nextAvailableNodeId() {
+      const ids=nodeGroups.flatMap(g=>(g.id===activeNodeGroupId?positions:g.points).map(p=>p.nodeId));
+      return Math.max(0,...ids)+1;
+    }
+    document.getElementById('addNodeGroupBtn').addEventListener('click',()=>{
+      commitHistory();syncActiveNodeGroup();const type=document.getElementById('newNodeGroupType').value;
+      const group={id:crypto.randomUUID(),name:`${type==='fixed'?'Static':'Mobile'} ${nodeGroups.length+1}`,type,points:[]};
+      nodeGroups.push(group);selectNodeGroup(group.id);nodeInput.value=String(nextAvailableNodeId());
+    });
+    document.getElementById('nodeGroupName').addEventListener('change',e=>{
+      const name=e.target.value.trim();if(!name){renderNodeGroups();return;}
+      commitHistory();nodeGroups.find(g=>g.id===activeNodeGroupId).name=name;renderNodeGroups();persistSessionStateDebounced();
+    });
+    document.getElementById('deleteNodeGroupBtn').addEventListener('click',()=>{
+      commitHistory();const old=activeNodeGroupId;nodeGroups=nodeGroups.filter(g=>g.id!==old);
+      if(!nodeGroups.length)nodeGroups.push({id:crypto.randomUUID(),name:'Static 1',type:'fixed',points:[]});
+      selectNodeGroup(nodeGroups[0].id);
+    });
 
     function setPolygonUiEnabled() {
       if (!workModePolygonBtn) return;
@@ -1022,7 +1128,7 @@
       }
 
       commitHistory();
-      const startNodeId = positions.length > 0 ? (Math.max(...positions.map(p => p.nodeId || 1)) + 1) : (parseInt(nodeInput.value) || 1);
+      const startNodeId = Math.max(nextAvailableNodeId(), parseInt(nodeInput.value) || 1);
       // Append nodes so multiple polygons can deploy into the same project
       const newPositions = candidates.map((m, idx) => {
         const ll = localMetersToLatLngAt(m.x, m.y, lat0, lng0);
@@ -1151,6 +1257,7 @@
 
     function updateScenario(value) {
       if (value !== 'mobile' && value !== 'fixed') return;
+      if (!switchingNodeGroup && nodeGroups.find(g => g.id === activeNodeGroupId)?.type !== value) return;
       if (value !== scenario) commitHistory();
       scenario = value;
       scenarioModel.scenario = value;
@@ -1229,9 +1336,12 @@
 
     // === Map-mode interactions ===
     map.on('mousemove', (e)=>{ 
+      const hoverPoint = map.latLngToContainerPoint(e.latlng);
+      map.getContainer().style.cursor = draggingNodeIndex >= 0 ? 'grabbing' : hitTestNodeMap(hoverPoint.x, hoverPoint.y) >= 0 ? 'pointer' : '';
       if (mode === 'point') {
         // Node dragging
         if (draggingNodeIndex >= 0 && selected.size > 0) { 
+          if (!wasDragging && Math.hypot(hoverPoint.x - dragStartPx.x, hoverPoint.y - dragStartPx.y) < 4) return;
           wasDragging = true;
           const currentLatLng = e.latlng;
           const startLatLng = [preDragSnapshot.positions[draggingNodeIndex].lat, preDragSnapshot.positions[draggingNodeIndex].lng];
@@ -1258,14 +1368,29 @@
       }
     });
 
+    map.on('mouseout', () => { map.getContainer().style.cursor = ''; });
+
     map.on('mousedown', (e)=>{ 
+      if (e.originalEvent.button !== undefined && e.originalEvent.button !== 0) return;
+      const hitPoint = map.latLngToContainerPoint(e.latlng);
+      const hitNode = hitTestNodeMap(hitPoint.x, hitPoint.y);
+      // Selection is available in every mode; moving nodes remains a Point Mode action.
+      if (mode !== 'point' && hitNode >= 0) {
+        if (e.originalEvent.shiftKey) {
+          if (selected.has(hitNode)) selected.delete(hitNode); else selected.add(hitNode);
+        } else { selected.clear(); selected.add(hitNode); }
+        lastClickedIndex = hitNode;
+        map.dragging.disable();
+        draw();
+        return;
+      }
       // Only allow node editing in point mode
       if (mode === 'point') {
         const pt = map.latLngToContainerPoint(e.latlng); 
         const i = hitTestNodeMap(pt.x, pt.y);
         
         // Ctrl + Click: Point selection (single or multi with Shift)
-        if (e.originalEvent.ctrlKey || e.originalEvent.metaKey) {
+        if (e.originalEvent.ctrlKey || e.originalEvent.metaKey || e.originalEvent.shiftKey) {
           isCtrlSelection = true;
           if (i >= 0) {
             // Toggle selection with Shift, replace selection without Shift
@@ -1293,8 +1418,12 @@
             }
           }
         }
-        // Normal Click on selected node: Start dragging
-        else if (i >= 0 && selected.has(i)) {
+        // Normal click selects the node, then allows dragging without a modifier.
+        else if (i >= 0) {
+          if (!selected.has(i)) { selected.clear(); selected.add(i); }
+          lastClickedIndex = i;
+          window.mouseDownLatLng = null;
+          draw();
           isCtrlSelection = false;
           draggingNodeIndex = i;
           preDragSnapshot = snapshot();
@@ -1377,8 +1506,7 @@
           const before = JSON.stringify(preDragSnapshot.positions); 
           const after = JSON.stringify(positions); 
           if (before !== after) commitHistory(preDragSnapshot);
-          refreshLatLngInput();
-          updateOutput();
+          if (before !== after) { refreshLatLngInput(); updateOutput(); }
         }
         else if (isSelectingRect) {
           const dx = Math.abs(selEndS.x - selStartS.x);
@@ -1427,7 +1555,7 @@
               nextNodeId = parseInt(nodeInput.value) || 1;
               if (positions.length > 0) {
                 const maxNodeId = Math.max(...positions.map(p => p.nodeId || 1));
-                nextNodeId = maxNodeId + 1;
+                nextNodeId = Math.max(maxNodeId + 1, nextAvailableNodeId());
               }
             }
             
@@ -1464,6 +1592,8 @@
       
       // Reset state
       draggingNodeIndex = -1;
+      const releasePoint = map.latLngToContainerPoint(e.latlng);
+      map.getContainer().style.cursor = hitTestNodeMap(releasePoint.x, releasePoint.y) >= 0 ? 'pointer' : '';
       selectedInitial = null;
       preDragSnapshot = null; 
       isSelectingRect = false;
@@ -1677,9 +1807,19 @@
       updateOutput();
       draw();
     });
-    saveBtn.addEventListener('click', () => {
+    let staticCoojaPositions = null;
+    let mobileCoojaTrace = null;
+    saveBtn.addEventListener('click', async () => {
       if (output.dataset.kind !== 'export') {
         alert('Choose a simulator and press Convert before saving.');
+        return;
+      }
+      if (output.dataset.staticCsc === 'true') {
+        await saveStaticCoojaCsc();
+        return;
+      }
+      if (output.dataset.exportTool === 'cooja') {
+        await saveMobileCoojaCsc();
         return;
       }
       const filename = output.dataset.exportFilename;
@@ -1807,6 +1947,14 @@
       }
       ctx.clearRect(0,0,canvas.width, canvas.height);
 
+      ctx.save();
+      for(const group of nodeGroups){
+        if(group.id===activeNodeGroupId)continue;
+        ctx.strokeStyle=group.type==='mobile'?'#7057b8':'#468b79';ctx.fillStyle=ctx.strokeStyle;ctx.globalAlpha=.55;
+        if(group.type==='mobile'&&group.points.length){ctx.beginPath();group.points.forEach((p,i)=>{const q=map.latLngToContainerPoint([p.lat,p.lng]);if(i)ctx.lineTo(q.x,q.y);else ctx.moveTo(q.x,q.y)});ctx.stroke();}
+        for(const p of group.points){const q=map.latLngToContainerPoint([p.lat,p.lng]);ctx.beginPath();ctx.arc(q.x,q.y,7,0,2*Math.PI);ctx.fill();ctx.font='12px Arial';ctx.fillText(String(p.nodeId),q.x+10,q.y);}
+      }
+      ctx.restore();
       const rPx = nodeRadiusPx(); let index=1; 
       // Draw route links only in Mobile scenario (movement path).
       // In Static scenario, we don't know actual connectivity, so we draw no links.
@@ -1850,6 +1998,10 @@
           ctx.lineWidth = isLastFocus ? 2 : 1.5;
           ctx.setLineDash([6, 5]);
           ctx.arc(centerPx.x, centerPx.y, radiusPx, 0, Math.PI * 2);
+          ctx.fillStyle = isLastFocus ? 'rgba(220, 130, 0, 0.16)' : 'rgba(255, 165, 0, 0.10)';
+          ctx.globalCompositeOperation = 'destination-over';
+          ctx.fill();
+          ctx.globalCompositeOperation = 'source-over';
           ctx.stroke();
           ctx.restore();
         }
@@ -1865,6 +2017,10 @@
         ctx.lineWidth = 1.5;
         ctx.setLineDash([5, 5]);
         ctx.arc(centerPx.x, centerPx.y, radiusPx, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(220, 130, 0, 0.16)';
+        ctx.globalCompositeOperation = 'destination-over';
+        ctx.fill();
+        ctx.globalCompositeOperation = 'source-over';
         ctx.stroke();
         ctx.restore();
       }
@@ -2073,6 +2229,19 @@
       renderPropagationProfileUi();
     }
 
+    function syncRadioRangeDefaults() {
+      propagationRangeInput.value = String(getCircleRadiusMeters());
+      propagationInterferenceRangeInput.value = String(2 * getCircleRadiusMeters());
+      if (propagationEnvironmentSelect.options.length) renderPropagationProfileUi();
+    }
+    circleRadiusSelect.addEventListener('change', syncRadioRangeDefaults);
+    circleRadiusCustomInput.addEventListener('input', syncRadioRangeDefaults);
+    propagationRangeInput.addEventListener('input', () => {
+      const tx = Number(propagationRangeInput.value);
+      if (Number.isFinite(tx) && tx > 0) propagationInterferenceRangeInput.value = String(2 * tx);
+    });
+    syncRadioRangeDefaults();
+
     propagationEnvironmentSelect.addEventListener('change', () => {
       populateCitedProfiles();
       try { localStorage.setItem(PROPAGATION_ENVIRONMENT_STORAGE_KEY, propagationEnvironmentSelect.value); } catch (e) {}
@@ -2095,30 +2264,34 @@
       input.addEventListener('change', renderPropagationProfileUi);
     });
     enablePathLossProfile.addEventListener('change', renderPropagationProfileUi);
-    coojaCscFileInput.addEventListener('change', async () => {
+    async function selectCoojaCsc(file, handle = null) {
+      if (!file) return;
       selectedCoojaCsc = null;
-      const file = coojaCscFileInput.files && coojaCscFileInput.files[0];
-      if (!file) {
-        coojaCscFileStatus.textContent = 'No .csc file selected.';
-        coojaCscFileStatus.style.color = '#555';
-        renderPropagationProfileUi();
-        return;
-      }
+      renderPropagationProfileUi();
       try {
         const text = await file.text();
         const inspection = inspectCoojaCsc(text, file.name);
-        selectedCoojaCsc = { file, text, inspection };
+        selectedCoojaCsc = { file, text, inspection, handle };
         const prior = inspection.radioMediumClass || 'none (a LogisticLoss block will be inserted)';
-        coojaCscFileStatus.textContent = `${file.name} selected — current radio medium: ${prior}; motes preserved: ${inspection.moteCount}.`;
+        coojaCscFileStatus.textContent = `${file.name} selected — current radio medium: ${prior}; ${handle ? 'updates this file' : 'downloads an updated copy'}.`;
         coojaCscFileStatus.style.color = '#166534';
       } catch (error) {
-        const details = error instanceof CoojaCscWriteError && error.errors.length
-          ? error.errors.join(' ')
-          : error.message;
-        coojaCscFileStatus.textContent = `Cannot use ${file.name}: ${details}`;
+        coojaCscFileStatus.textContent = `Cannot use ${file.name}: ${error.errors?.join(' ') || error.message}`;
         coojaCscFileStatus.style.color = '#b91c1c';
       }
       renderPropagationProfileUi();
+    }
+    document.getElementById('chooseCoojaCscBtn').addEventListener('click', async () => {
+      if (!window.showOpenFilePicker) { coojaCscFileInput.value = ''; coojaCscFileInput.click(); return; }
+      try {
+        const [handle] = await window.showOpenFilePicker({multiple:false, types:[{description:'Cooja simulation', accept:{'application/xml':['.csc']}}]});
+        await selectCoojaCsc(await handle.getFile(), handle);
+      } catch (error) {
+        if (error.name !== 'AbortError') alert(`Cannot select Cooja simulation: ${error.message}`);
+      }
+    });
+    coojaCscFileInput.addEventListener('change', async () => {
+      await selectCoojaCsc(coojaCscFileInput.files[0]);
     });
 
     function downloadTextArtifact(artifact) {
@@ -2131,15 +2304,143 @@
       setTimeout(() => URL.revokeObjectURL(url), 0);
     }
 
-    writeCoojaCscBtn.addEventListener('click', () => {
+    function staticPathLossSettings() {
+      if (!enablePathLossProfile.checked) return null;
+      const citedProfile = selectedCitedProfile();
+      const inputs = readPropagationInputs();
+      return {randomSeed: inputs.randomSeed, profileLabel: citedProfile.label,
+        profileUrl: citedProfileSource(citedProfile).url,
+        radio: {transmittingRangeM: inputs.maximumRangeM, successRatioTx: inputs.successRatioTx,
+          rxSensitivityDbm: inputs.rxSensitivityDbm, rssiInflectionPointDbm: inputs.rssiInflectionPointDbm,
+          pathLossExponent: citedProfile.n, awgnSigmaDb: inputs.shadowingSigmaDb,
+          enableTimeVariation: inputs.enableTimeVariation}};
+    }
+
+    async function writeFileHandle(handle, content) {
+      const stream = await handle.createWritable();
+      try { await stream.write(content); await stream.close(); }
+      catch (error) { await stream.abort().catch(() => {}); throw error; }
+    }
+
+    async function saveMobileCoojaCsc() {
+      try {
+        const trace = mobileCoojaTrace;
+        const staticPoints = staticCoojaPositions?.map(p=>({...p}));
+        if (!trace) throw new Error('Convert the mobile scenario before saving.');
+        const profile = staticPathLossSettings();
+        const prepare = async file => {
+          if (!/\.csc$/i.test(file.name)) throw new Error('Select a .csc simulation file.');
+          const original = await file.text();
+          const staticResult = staticPoints?.length ? window.Field2SimCscPositionWriter.patchPositions(original,staticPoints) : null;
+          const result = window.Field2SimCscPositionWriter.patchMobility(staticResult?.text || original, trace);
+          result.staticMissing=staticResult?.missing || [];
+          if (profile) result.text = patchCoojaCsc({...profile,text:result.text,filename:file.name}).text;
+          return result;
+        };
+        const report = (name, result, downloaded = false) => {
+          output.textContent = result.trace;
+          showExportCompatibilityWarnings([
+            downloaded ? `Downloaded ${name} and positions.dat. Place both files in the same folder before opening the CSC.` : `Updated ${name} and wrote positions.dat in the same folder.`,
+            ...(result.staticMissing.length ? [`Static IDs not found (skipped): ${result.staticMissing.join(', ')}.`] : []),
+            ...result.mappings.map(m => `Node ID ${m.nodeId} maps to Cooja mote-array index ${m.index}.`),
+            'Mobility reads [CONFIG_DIR]/positions.dat; the tested plugin repeats the route.',
+            ...(profile ? ['LogisticLoss settings and random seed updated.'] : [])
+          ]);
+        };
+        if (!window.showOpenFilePicker || !window.showDirectoryPicker) {
+          const picker = document.createElement('input'); picker.type = 'file'; picker.accept = '.csc';
+          picker.addEventListener('change', async () => {
+            try {
+              if (!picker.files[0]) return;
+              const file = picker.files[0], result = await prepare(file);
+              const name = file.name.replace(/\.csc$/i,'-field2sim.csc');
+              downloadTextArtifact({text:result.text,filename:name,mimeType:'application/xml'});
+              downloadTextArtifact({text:result.trace,filename:'positions.dat',mimeType:'text/plain'});
+              report(name,result,true);
+            } catch (error) { alert(`Cannot save mobile Cooja simulation: ${error.errors?.join(' ') || error.message}`); }
+          }, {once:true}); picker.click(); return;
+        }
+        const [handle] = await window.showOpenFilePicker({multiple:false,types:[{description:'Cooja simulation',accept:{'application/xml':['.csc']}}]});
+        const file = await handle.getFile();
+        showExportCompatibilityWarnings([`Select the folder containing ${file.name} to write positions.dat beside it.`]);
+        const directory = await window.showDirectoryPicker({mode:'readwrite',startIn:handle});
+        const selected = await directory.getFileHandle(file.name);
+        if (!await selected.isSameEntry(handle)) throw new Error('Select the folder containing the chosen CSC. No files were written.');
+        const result = await prepare(await handle.getFile());
+        let positionsHandle, previousPositions = null;
+        try { positionsHandle = await directory.getFileHandle('positions.dat'); previousPositions = await (await positionsHandle.getFile()).arrayBuffer(); }
+        catch (error) { if (error.name !== 'NotFoundError') throw error; }
+        // Both artifacts are validated before writing. Restore positions if the CSC write fails.
+        if (!positionsHandle) positionsHandle = await directory.getFileHandle('positions.dat',{create:true});
+        try {
+          await writeFileHandle(positionsHandle,result.trace);
+          await writeFileHandle(handle,result.text);
+        } catch (error) {
+          try {
+            if (previousPositions !== null) await writeFileHandle(positionsHandle,previousPositions);
+            else await directory.removeEntry('positions.dat');
+          } catch (restoreError) { throw new Error(`${error.message} Restoring positions.dat also failed: ${restoreError.message}`); }
+          throw error;
+        }
+        report(file.name,result);
+      } catch (error) {
+        if (error.name !== 'AbortError') alert(`Cannot save mobile Cooja simulation: ${error.errors?.join(' ') || error.message}`);
+      }
+    }
+
+    async function saveStaticCoojaCsc() {
+      try {
+        // Snapshot this export before opening the file chooser.
+        const positions = staticCoojaPositions.map(p => ({...p}));
+        const profile = staticPathLossSettings();
+        const apply = async (file, handle) => {
+          if (!/\.csc$/i.test(file.name)) throw new Error('Select a .csc simulation file.');
+          const original = await file.text();
+          const result = window.Field2SimCscPositionWriter.patchPositions(original, positions);
+          const text = profile ? patchCoojaCsc({...profile, text:result.text, filename:file.name}).text : result.text;
+          // Validate all changes before opening a writable stream.
+          if (handle) {
+            const writable = await handle.createWritable();
+            try { await writable.write(text); await writable.close(); }
+            catch (error) { await writable.abort().catch(() => {}); throw error; }
+          } else {
+            downloadTextArtifact({text, mimeType:'application/xml', filename:file.name.replace(/\.csc$/i, '-field2sim.csc')});
+          }
+          const messages = [`${handle ? 'Updated' : 'Downloaded updated copy of'} ${file.name}: ${result.matched.length} matching mote IDs.`,
+            ...(result.missing.length ? [`IDs not found in CSC (skipped): ${result.missing.join(', ')}.`] : []),
+            ...(profile ? ['LogisticLoss settings and random seed updated.'] : []),
+            ...(result.hasMobility ? ['Existing Mobility plugin retained; it can move nodes after these initial positions are loaded.'] : [])];
+          showExportCompatibilityWarnings(messages);
+        };
+        if (window.showOpenFilePicker) {
+          const [handle] = await window.showOpenFilePicker({multiple:false, types:[{description:'Cooja simulation', accept:{'application/xml':['.csc']}}]});
+          await apply(await handle.getFile(), handle);
+        } else {
+          const picker = document.createElement('input');
+          picker.type = 'file'; picker.accept = '.csc';
+          picker.addEventListener('change', async () => {
+            try { if (picker.files[0]) await apply(picker.files[0], null); }
+            catch (error) { alert(`Cannot update static Cooja simulation: ${error.errors?.join(' ') || error.message}`); }
+          }, {once:true});
+          picker.click();
+        }
+      } catch (error) {
+        if (error.name !== 'AbortError') alert(`Cannot update static Cooja simulation: ${error.errors?.join(' ') || error.message}`);
+      }
+    }
+
+    writeCoojaCscBtn.addEventListener('click', async () => {
       try {
         if (!selectedCoojaCsc) throw new CoojaCscWriteError('Select an existing Cooja .csc file first.');
         const citedProfile = selectedCitedProfile();
         const source = citedProfileSource(citedProfile);
         const inputs = readPropagationInputs();
+        const selection = selectedCoojaCsc;
+        // Read the current file so a preceding static-position save is preserved.
+        const file = selection.handle ? await selection.handle.getFile() : selection.file;
         const artifact = patchCoojaCsc({
-          filename: selectedCoojaCsc.file.name,
-          text: selectedCoojaCsc.text,
+          filename: file.name,
+          text: await file.text(),
           randomSeed: inputs.randomSeed,
           profileLabel: citedProfile.label,
           profileUrl: source.url,
@@ -2153,11 +2454,21 @@
             enableTimeVariation: inputs.enableTimeVariation
           }
         });
-        downloadTextArtifact(artifact);
+        if (selection.handle) {
+          const writable = await selection.handle.createWritable();
+          try { await writable.write(artifact.text); await writable.close(); }
+          catch (error) { await writable.abort().catch(() => {}); throw error; }
+          if (selectedCoojaCsc === selection) {
+            selection.text = artifact.text;
+            selection.inspection = inspectCoojaCsc(artifact.text, file.name);
+          }
+        } else {
+          downloadTextArtifact(artifact);
+        }
         const skinNotice = artifact.removedUdgmVisualizerSkins
           ? ` Removed ${artifact.removedUdgmVisualizerSkins} incompatible UDGM visualizer skin entry.`
           : '';
-        propagationMappingStatus.textContent = `${artifact.filename} created. Existing motes, positions, Mobility, scripts, and other plugins were preserved.${skinNotice}`;
+        propagationMappingStatus.textContent = `${selection.handle ? file.name + " updated" : artifact.filename + " downloaded"}. Existing motes, positions, Mobility, scripts, and other plugins were preserved.${skinNotice}`;
         propagationMappingStatus.style.color = '#166534';
         propagationMappingStatus.style.borderColor = '#16a34a';
       } catch (error) {
@@ -2191,21 +2502,22 @@
       showExportCompatibilityWarnings();
     }
 
-    function updateOutput(){
+    function clearOutputPreview() {
       showExportCompatibilityWarnings();
+      output.textContent = '';
+      output.style.color = '';
       output.dataset.kind = 'source';
       delete output.dataset.exportTool;
       delete output.dataset.exportFilename;
       delete output.dataset.exportMimeType;
+      delete output.dataset.staticCsc;
+    }
+
+    function updateOutput(){
+      clearOutputPreview();
       persistSessionStateDebounced();
       if (propagationEnvironmentSelect.options.length) renderPropagationProfileUi();
-      if (positions.length === 0) {
-        output.textContent = '<node_id> <time> <latitude> <longitude>\n\nEdit map or paste rows above, then choose simulator and Convert.\nExample:\n1 0.000000000 41.286700000 36.330000000\n1 1.000000000 41.287000000 36.331000000';
-        output.style.color = '#999';
-        return;
-      }
-      output.style.color = '';
-      output.textContent = formatWaypointRows();
+      renderNodeGroups();
     }
 
     circleRadiusSelect.addEventListener('change', () => { draw(); });
@@ -2216,10 +2528,34 @@
       updateOutput();
     });
 
+    function exportNodeGroups() {
+      try {
+        syncActiveNodeGroup();
+        const groups=window.Field2SimNodeGroups.collect(nodeGroups);
+        const all=groups.flatMap(g=>g.points);if(!all.length){updateOutput();return;}
+        const origin=resolveOrigin(all),staticPoints=[],traces=[];
+        for(const group of groups){
+          if(!group.points.length)continue;
+          const local=group.points.map(p=>{const enu=geodeticToEnu({lat:p.lat,lng:p.lng,alt:p.z},origin);return {nodeId:p.nodeId,time:p.time,x:enu.east,y:enu.north,z:p.z-origin.alt}});
+          if(group.type==='fixed')staticPoints.push(...window.Field2SimCscPositionWriter.createStaticArtifact(local).positions);
+          else {const a=createArtifact('cooja',{scenario:'mobile',waypoints:local});traces.push(...a.text.trim().split(/\r?\n/));}
+        }
+        traces.sort((a,b)=>Number(a.split(/\s+/)[1])-Number(b.split(/\s+/)[1])||Number(a.split(/\s+/)[0])-Number(b.split(/\s+/)[0]));
+        staticCoojaPositions=staticPoints.length?staticPoints:null;mobileCoojaTrace=traces.length?traces.join('\n'):null;
+        output.dataset.staticCsc=String(!mobileCoojaTrace&&!!staticCoojaPositions);
+        output.dataset.kind='export';output.dataset.exportTool='cooja';output.dataset.exportFilename='positions.dat';output.dataset.exportMimeType='text/plain';
+        outputHeaderLabel.textContent='Output preview — all Node Groups';
+        output.textContent=[...(staticPoints.length?['# Static: mote ID x y z',...staticPoints.map(p=>`${p.nodeId} ${p.x} ${p.y} ${p.z}`)]:[]),...(traces.length?['# Mobile: provisional index time x y z (resolved against CSC on save)',...traces]:[])].join('\n');
+        showExportCompatibilityWarnings(['Cooja export includes all groups using one geographic origin.',...(traces.length?['Mobile routes share one cycle ending at the latest timestamp. Shorter routes hold their last position until the shared cycle restarts.']:[])]);
+      }catch(error){clearOutputPreview();alert(`Cannot export Node Groups: ${error.errors?.join(' ') || error.message}`);}
+    }
+
     convertBtn.addEventListener('click', () => {
+      clearTimeout(latlngInputTimeout); // Do not let a pending input refresh invalidate this export.
+      clearOutputPreview();
       const text = latlngInput.value.trim();
       if (!text) {
-        updateOutput();
+        if(simExportSelect.value==='cooja'){setPositions([]);exportNodeGroups();}else updateOutput();
         return;
       }
 
@@ -2274,6 +2610,7 @@
       }
       setPositions(parsedPoints);
       refreshLatLngInput();
+      if (simExportSelect.value === 'cooja') { exportNodeGroups(); return; }
 
       let origin;
       try {
@@ -2298,13 +2635,19 @@
       const tool = simExportSelect.value;
       let artifact;
       try {
-        artifact = createArtifact(tool, { scenario, waypoints: localPoints });
+        artifact = tool === 'cooja' && scenario === 'fixed'
+          ? window.Field2SimCscPositionWriter.createStaticArtifact(localPoints)
+          : createArtifact(tool, { scenario, waypoints: localPoints });
       } catch (error) {
         const details = error instanceof AdapterValidationError ? error.errors.join('\n• ') : error.message;
         alert(`Cannot create ${getAdapter(tool).label} export:\n• ${details}`);
         return;
       }
 
+      mobileCoojaTrace = tool === 'cooja' && scenario === 'mobile' ? artifact.text : null;
+      staticCoojaPositions = artifact.positions || null;
+      output.dataset.staticCsc = String(Boolean(staticCoojaPositions));
+      if (staticCoojaPositions) outputHeaderLabel.textContent = 'Output preview — Cooja static positions (mote ID, x, y, z)';
       output.textContent = artifact.text;
       output.style.color = '';
       output.dataset.kind = 'export';
@@ -2317,10 +2660,7 @@
     let latlngInputTimeout;
     latlngInput.addEventListener('input', (e) => {
       const text = e.target.value.trim();
-      output.dataset.kind = 'source';
-      delete output.dataset.exportTool;
-      delete output.dataset.exportFilename;
-      delete output.dataset.exportMimeType;
+      clearOutputPreview();
       
       // Clear timeout if user is still typing
       if (latlngInputTimeout) clearTimeout(latlngInputTimeout);
@@ -2507,6 +2847,16 @@
 
     // === Keyboard Shortcuts Overlay ===
     const shortcutsOverlay = document.getElementById('shortcutsOverlay');
+    document.getElementById('closeShortcutsBtn').addEventListener('click', () => {
+      shortcutsOverlay.classList.remove('show');
+    });
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && shortcutsOverlay.classList.contains('show')) {
+        e.preventDefault();
+        e.stopImmediatePropagation(); // Closing help must not cancel a polygon or clear node selection.
+        shortcutsOverlay.classList.remove('show');
+      }
+    }, true);
     let ctrlPressed = false;
     let questionMarkPressed = false;
 
