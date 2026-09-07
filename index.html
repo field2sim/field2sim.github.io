@@ -1998,7 +1998,7 @@
           ctx.lineWidth = isLastFocus ? 2 : 1.5;
           ctx.setLineDash([6, 5]);
           ctx.arc(centerPx.x, centerPx.y, radiusPx, 0, Math.PI * 2);
-          ctx.fillStyle = isLastFocus ? 'rgba(220, 130, 0, 0.16)' : 'rgba(255, 165, 0, 0.10)';
+          ctx.fillStyle = isLastFocus ? 'rgba(255, 215, 0, 0.32)' : 'rgba(255, 215, 0, 0.24)';
           ctx.globalCompositeOperation = 'destination-over';
           ctx.fill();
           ctx.globalCompositeOperation = 'source-over';
@@ -2017,7 +2017,7 @@
         ctx.lineWidth = 1.5;
         ctx.setLineDash([5, 5]);
         ctx.arc(centerPx.x, centerPx.y, radiusPx, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(220, 130, 0, 0.16)';
+        ctx.fillStyle = 'rgba(255, 215, 0, 0.32)';
         ctx.globalCompositeOperation = 'destination-over';
         ctx.fill();
         ctx.globalCompositeOperation = 'source-over';
@@ -2028,10 +2028,11 @@
     }
 
     function drawNodeCircle(cx, cy, rPx, index){ 
-      ctx.beginPath(); ctx.fillStyle=NODE_STYLE.fill; ctx.strokeStyle=NODE_STYLE.stroke; ctx.lineWidth=NODE_STYLE.strokeWidth; 
-      ctx.arc(cx, cy, rPx, 0, Math.PI*2); ctx.fill(); ctx.stroke();
       const idx=index-1;
-      // Selection is shown via Circle Radius rings in draw(); avoid double outline on the node disk.
+      const isSelected = selected.has(idx) || (selected.size === 0 && idx === lastClickedIndex);
+      // The fixed-size yellow disk keeps selection visible when the range ring shrinks on zoom-out.
+      ctx.beginPath(); ctx.fillStyle=isSelected ? '#FFD700' : NODE_STYLE.fill; ctx.strokeStyle=NODE_STYLE.stroke; ctx.lineWidth=NODE_STYLE.strokeWidth;
+      ctx.arc(cx, cy, rPx, 0, Math.PI*2); ctx.fill(); ctx.stroke();
       // Use Node ID from position object
       const position = positions[idx];
       if (isOriginNode(position)) {
