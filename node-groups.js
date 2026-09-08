@@ -20,5 +20,22 @@
       return {...g,points};
     });
   }
-  return {parseRows,collect};
+  // Renumber only after a single existing row's ID changes; preserve all other fields.
+  function renumberFollowingIds(before, after) {
+    const oldRows=before.split('\n'), rows=after.split('\n');
+    if(oldRows.length!==rows.length)return after;
+    const changed=rows.map((r,i)=>r!==oldRows[i]?i:-1).filter(i=>i>=0);
+    if(changed.length!==1)return after;
+    const index=changed[0], oldMatch=oldRows[index].match(/^(\s*)(\d+)(\s+.*)$/), match=rows[index].match(/^(\s*)(\d+)(\s+.*)$/);
+    if(!oldMatch||!match||oldMatch[2]===match[2]||oldMatch[3]!==match[3])return after;
+    let id=Number(match[2]);
+    if(!Number.isSafeInteger(id)||id<1)return after;
+    for(let i=index+1;i<rows.length;i++){
+      if(!rows[i].trim())continue;
+      if(!/^\s*\d+\s+/.test(rows[i])||!Number.isSafeInteger(++id))return after;
+      rows[i]=rows[i].replace(/^(\s*)\d+/,(_,space)=>space+id);
+    }
+    return rows.join('\n');
+  }
+  return {parseRows,collect,renumberFollowingIds};
 });

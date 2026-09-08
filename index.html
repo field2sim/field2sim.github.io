@@ -424,17 +424,20 @@
           <label for="latlngInput"><b>Latitude/Longitude Input</b></label>
           <button id="uploadBtn">Upload .dat</button>
         </div>
-        <div class="hint" style="margin: -4px 0 6px; text-align: right;">Upload .dat expects Cooja's <code>positions.dat</code>: <code>node_id time x y z</code> (meters) — not latitude/longitude.</div>
-        <textarea id="latlngInput" placeholder="&lt;node_id&gt; &lt;time&gt; &lt;latitude&gt; &lt;longitude&gt;&#10;Example:&#10;1 0.0 41.2867 36.33&#10;1 1.0 41.2870 36.331" style="width: 100%; height: 150px; font-family: monospace; font-size: 12px; padding: 5px; border: 1px solid #ccc; resize: vertical;"></textarea>
+        <div class="hint" style="margin: 6px 0 6px; text-align: right;">Upload .dat expects Cooja's <code>positions.dat</code>: <code>node_id time x y z</code> (meters) — not latitude/longitude.</div>
+        <div id="autoNodeIdsControl" hidden style="margin: 6px 0; font-size: 12px;">
+          <label><input type="checkbox" id="autoNodeIds"> Automatically number following rows after a Node ID edit</label>
+        </div>
+        <textarea id="latlngInput" placeholder="&lt;node_id&gt; &lt;time&gt; &lt;latitude&gt; &lt;longitude&gt;&#10;Example:&#10;1 0.0 41.2867 36.33&#10;1 1.0 41.2870 36.331" style="box-sizing: border-box; width: 100%; height: 150px; font-family: monospace; font-size: 12px; padding: 5px; border: 1px solid #ccc; resize: vertical;"></textarea>
         <div style="margin-top: 8px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px;">
           <label for="simExportSelect"><b>Simulator</b></label>
-          <select id="simExportSelect" style="padding: 4px 8px;">
+          <select id="simExportSelect" style="flex: 1; min-width: 0; padding: 4px 8px;">
             <option value="cooja" selected>Cooja</option>
             <option value="ns2">ns-2</option>
             <option value="ns3">ns-3</option>
             <option value="omnetpp">OMNeT++</option>
           </select>
-          <button id="convertBtn" type="button" style="padding: 6px 10px;">
+          <button id="convertBtn" type="button" style="flex: 0 0 100%; width: 100%; box-sizing: border-box; padding: 6px 10px;">
             Convert<span aria-hidden="true" style="margin-left: 6px; font-weight: bold;">⬇</span>
           </button>
         </div>
@@ -442,11 +445,11 @@
       <div class="output-container">
         <div class="output-header">
           <label id="outputHeaderLabel" for="output"><b>Output preview</b></label>
-          <button id="saveBtn">Save export</button>
         </div>
         <div id="exportCompatibilityNotice" hidden role="status" style="margin:8px 0; padding:8px 10px; border:1px solid #d97706; border-radius:4px; background:#fffbeb; color:#78350f; font-size:12px; line-height:1.4;"></div>
         <pre id="output"></pre>
-        <div style="margin-top: 8px; display: flex; justify-content: flex-end;">
+        <div style="margin-top: 8px; display: flex; justify-content: flex-end; gap: 8px;">
+          <button id="saveBtn" style="flex: 1;">Save export</button>
           <button id="copyOutputBtn" title="Copy all content">Copy</button>
         </div>
       </div>
@@ -520,7 +523,7 @@
         <div id="propagationProfileStatus" class="hint" role="status" style="margin-top:6px;"></div>
         <div id="propagationMappingStatus" class="hint" role="status" style="margin-top:6px; padding:6px; border:1px solid #b9c8dc; border-radius:4px;"></div>
         <label for="chooseCoojaCscBtn" style="display:block; margin-top:9px;"><b>Existing Cooja simulation file</b></label>
-        <button id="chooseCoojaCscBtn" type="button" style="margin-top:5px;">Choose .csc file</button>
+        <button id="chooseCoojaCscBtn" type="button" style="margin-top:5px; width:100%; box-sizing:border-box;">Choose .csc file</button>
         <input id="coojaCscFileInput" type="file" accept=".csc,application/xml,text/xml" hidden>
         <div id="coojaCscFileStatus" class="hint" role="status" style="margin-top:5px;">No .csc file selected.</div>
         <button id="writeCoojaCscBtn" type="button" style="margin-top:8px; width:100%;" disabled>Write to Cooja Simulation File</button>
@@ -657,6 +660,8 @@
     const map = L.map('map', {
       center: savedCenter,
       zoom: savedZoom,
+      zoomSnap: 0.25,
+      zoomDelta: 0.25,
       zoomControl: true,
       attributionControl: true
     });
@@ -1013,6 +1018,7 @@
         button.append(info); button.addEventListener('click',()=>selectNodeGroup(group.id));list.append(button);
       }
       const group=nodeGroups.find(g=>g.id===activeNodeGroupId);
+      document.getElementById('autoNodeIdsControl').hidden=group?.type!=='fixed';
       document.getElementById('nodeGroupName').value=group?.name || '';
       scenarioMobileBtn.disabled=group?.type!=='mobile';scenarioFixedBtn.disabled=group?.type!=='fixed';
       scenarioMobileBtn.classList.toggle('active',group?.type==='mobile');scenarioFixedBtn.classList.toggle('active',group?.type==='fixed');
@@ -1261,6 +1267,7 @@
       if (value !== scenario) commitHistory();
       scenario = value;
       scenarioModel.scenario = value;
+      document.getElementById('autoNodeIdsControl').hidden=value!=='fixed';
       scenarioMobileBtn.classList.toggle('active', value === 'mobile');
       scenarioFixedBtn.classList.toggle('active', value === 'fixed');
       setPolygonUiEnabled();
@@ -1727,7 +1734,7 @@
         const mouseLatLng = map.containerPointToLatLng([mouseX, mouseY]);
         const zoomIn = e.deltaY < 0;
         const currentZoom = map.getZoom();
-        const newZoom = zoomIn ? currentZoom + 1 : currentZoom - 1;
+        const newZoom = currentZoom + (zoomIn ? map.options.zoomDelta : -map.options.zoomDelta);
         const clampedZoom = Math.max(1, Math.min(19, newZoom));
         map.setView(mouseLatLng, clampedZoom);
       }
@@ -1950,7 +1957,8 @@
       ctx.save();
       for(const group of nodeGroups){
         if(group.id===activeNodeGroupId)continue;
-        ctx.strokeStyle=group.type==='mobile'?'#7057b8':'#468b79';ctx.fillStyle=ctx.strokeStyle;ctx.globalAlpha=.55;
+        ctx.strokeStyle=group.type==='mobile'?'#7956B5':'#468b79';ctx.fillStyle=ctx.strokeStyle;ctx.globalAlpha=group.type==='mobile'?.7:.55;
+        ctx.lineWidth=1.5;
         if(group.type==='mobile'&&group.points.length){ctx.beginPath();group.points.forEach((p,i)=>{const q=map.latLngToContainerPoint([p.lat,p.lng]);if(i)ctx.lineTo(q.x,q.y);else ctx.moveTo(q.x,q.y)});ctx.stroke();}
         for(const p of group.points){const q=map.latLngToContainerPoint([p.lat,p.lng]);ctx.beginPath();ctx.arc(q.x,q.y,7,0,2*Math.PI);ctx.fill();ctx.font='12px Arial';ctx.fillText(String(p.nodeId),q.x+10,q.y);}
       }
@@ -2659,7 +2667,17 @@
     });
 
     let latlngInputTimeout;
+    let inputBeforeEdit=null;
+    latlngInput.addEventListener('beforeinput', () => { inputBeforeEdit=latlngInput.value; });
     latlngInput.addEventListener('input', (e) => {
+      if(scenario==='fixed' && document.getElementById('autoNodeIds').checked && inputBeforeEdit!==null && !e.isComposing){
+        const revised=window.Field2SimNodeGroups.renumberFollowingIds(inputBeforeEdit,e.target.value);
+        if(revised!==e.target.value){
+          const start=e.target.selectionStart,end=e.target.selectionEnd;
+          e.target.value=revised;e.target.setSelectionRange(start,end);
+        }
+      }
+      inputBeforeEdit=null;
       const text = e.target.value.trim();
       clearOutputPreview();
       
