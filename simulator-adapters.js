@@ -165,11 +165,6 @@
         'Static Cooja export is disabled: the tested Mobility plugin wraps all-zero timestamps into a zero-duration cycle.'
       );
     }
-    if (scenario.waypoints.some(point => isFiniteNumber(point.z) && Math.abs(point.z) > EPSILON)) {
-      errors.push(
-        'Three-dimensional Cooja export is disabled: the tested Mobility plugin ignores the Z field and retains the mote\'s existing Z coordinate.'
-      );
-    }
     return errors;
   }
 
@@ -177,7 +172,8 @@
     if (!scenario || scenario.scenario !== 'mobile') return [];
     return [
       'Cyclic mobility: the tested Cooja Mobility plugin restarts at the first waypoint after the final timestamp.',
-      'Node mapping: exported node numbers are zero-based mote-array indices, not Cooja mote IDs.'
+      'Node mapping: exported node numbers are zero-based mote-array indices, not Cooja mote IDs.',
+      ...(scenario.waypoints.some(p => Math.abs(p.z) > EPSILON) ? ['Z is included in positions.dat, but the tested Cooja Mobility plugin ignores it and retains the mote’s existing Z.'] : [])
     ];
   }
 
@@ -186,7 +182,7 @@
     label: 'Cooja',
     filename: 'positions.dat',
     mimeType: 'text/plain',
-    outputHint: 'Cooja Mobility (planar, cyclic: mote-index time x y z=0)',
+    outputHint: 'Cooja Mobility (cyclic: mote-index time x y z)',
     validate(scenario) {
       return validateCanonicalScenario(scenario).concat(coojaExtraValidation(scenario));
     },
@@ -211,8 +207,10 @@
     const errors = [];
     const initialized = new Map();
     const movements = [];
+    const altitudeUpdates = [];
     const initialPattern = new RegExp(`^\\$node_\\((\\d+)\\)\\s+set\\s+([XYZ])_\\s+(${NUMBER_PATTERN})$`);
     const movePattern = new RegExp(`^\\$ns_\\s+at\\s+(${NUMBER_PATTERN})\\s+"\\$node_\\((\\d+)\\)\\s+setdest\\s+(${NUMBER_PATTERN})\\s+(${NUMBER_PATTERN})\\s+(${NUMBER_PATTERN})"$`);
+    const altitudePattern = new RegExp(`^\\$ns_\\s+at\\s+(${NUMBER_PATTERN})\\s+"\\$node_\\((\\d+)\\)\\s+set Z_\\s+(${NUMBER_PATTERN})"$`);
 
     String(text).split(/\r?\n/).forEach((rawLine, index) => {
       const line = rawLine.trim();
@@ -225,6 +223,13 @@
         if (!initialized.has(nodeIndex)) initialized.set(nodeIndex, new Map());
         if (initialized.get(nodeIndex).has(axis)) errors.push(`Duplicate ${axis}_ initialization for node ${nodeIndex}.`);
         initialized.get(nodeIndex).set(axis, value);
+        return;
+      }
+      const altitude = line.match(altitudePattern);
+      if (altitude) {
+        const update = {time:Number(altitude[1]), nodeIndex:Number(altitude[2]), z:Number(altitude[3])};
+        if(update.time < 0) errors.push(`Invalid altitude update time at line ${index+1}.`);
+        altitudeUpdates.push(update);
         return;
       }
       const move = line.match(movePattern);
@@ -249,22 +254,15 @@
         if (!axes.has(axis)) errors.push(`Node ${nodeIndex} is missing ${axis}_ initialization.`);
       }
     }
-    movements.forEach(move => {
+    [...movements, ...altitudeUpdates].forEach(move => {
       if (!initialized.has(move.nodeIndex)) errors.push(`Movement references uninitialized node ${move.nodeIndex}.`);
     });
     if (!initialized.size) errors.push('The trace contains no node initialization statements.');
-    return { valid: errors.length === 0, errors, initialized, movements };
+    return { valid: errors.length === 0, errors, initialized, movements, altitudeUpdates };
   }
 
   function ns2FamilyExtraValidation(scenario) {
-    const errors = [];
-    if (scenario.scenario === 'mobile' && scenario.waypoints.length > 1) {
-      const firstZ = scenario.waypoints[0].z;
-      if (scenario.waypoints.some(point => Math.abs(point.z - firstZ) > EPSILON)) {
-        errors.push('The ns-2 setdest grammar cannot represent changing Z coordinates.');
-      }
-    }
-    return errors;
+    return [];
   }
 
   function createNs2FamilyAdapter(id, label, filename, hint) {
@@ -274,6 +272,10 @@
       filename,
       mimeType: 'text/plain',
       outputHint: hint,
+      warnings(scenario) {
+        return scenario.scenario === 'mobile' && scenario.waypoints.some(p=>p.z!==scenario.waypoints[0].z)
+          ? ['Z changes at waypoint timestamps; setdest interpolates X/Y only, not continuous vertical motion.'] : [];
+      },
       validate(scenario) {
         return validateCanonicalScenario(scenario).concat(ns2FamilyExtraValidation(scenario));
       },
@@ -297,12 +299,17 @@
             const nodeIndex = nodeId - 1;
             const path = groups.get(nodeId);
             for (let i = 0; i < path.length - 1; i++) {
+              if(i > 0 && path[i].z !== path[i-1].z)
+                lines.push(`$ns_ at ${formatNumber(path[i].time)} "$node_(${nodeIndex}) set Z_ ${formatNumber(path[i].z)}"`);
               const from = simulatorPoint(path[i]);
               const to = simulatorPoint(path[i + 1]);
               const dt = path[i + 1].time - path[i].time;
               const speed = Math.hypot(to.x - from.x, to.y - from.y) / dt;
               lines.push(`$ns_ at ${formatNumber(path[i].time)} "$node_(${nodeIndex}) setdest ${formatNumber(to.x)} ${formatNumber(to.y)} ${formatNumber(speed)}"`);
             }
+            const last = path.length - 1;
+            if(last > 0 && path[last].z !== path[last-1].z)
+              lines.push(`$ns_ at ${formatNumber(path[last].time)} "$node_(${nodeIndex}) set Z_ ${formatNumber(path[last].z)}"`);
           });
         }
         const text = lines.join('\n');
@@ -329,15 +336,13 @@
         errors.push('INET BonnMotion line-to-host mapping requires contiguous editor nodeIds starting at 1.');
       }
     });
-    if (scenario.waypoints.some(point => Math.abs(point.z) > EPSILON)) {
-      errors.push('The selected INET BonnMotion triplet format is two-dimensional and requires z=0.');
-    }
     return Array.from(new Set(errors));
   }
 
   function validateInetBonnMotionOutput(text, expectedScenario) {
     const errors = [];
     const paths = [];
+    const stride = expectedScenario?.waypoints.some(p=>Math.abs(p.z)>EPSILON) ? 4 : 3;
     const lines = String(text).split(/\r?\n/);
     if (lines.some(line => !line.trim())) errors.push('INET BonnMotion output must not contain blank lines.');
     lines.forEach((line, lineIndex) => {
@@ -348,13 +353,13 @@
         return;
       }
       const values = trimmed.split(/\s+/).map(Number);
-      if (values.length % 3 !== 0 || values.length < 3 || values.some(value => !Number.isFinite(value))) {
-        errors.push(`INET BonnMotion line ${lineIndex + 1} must contain numeric t x y triplets.`);
+      if (values.length % stride !== 0 || values.length < stride || values.some(value => !Number.isFinite(value))) {
+        errors.push(`INET BonnMotion line ${lineIndex + 1} must contain numeric ${stride === 4 ? "t x y z quadruples" : "t x y triplets"}.`);
         return;
       }
       const path = [];
-      for (let i = 0; i < values.length; i += 3) {
-        path.push({ time: values[i], x: values[i + 1], y: values[i + 2] });
+      for (let i = 0; i < values.length; i += stride) {
+        path.push({ time: values[i], x: values[i + 1], y: values[i + 2], ...(stride === 4 ? {z:values[i+3]} : {}) });
       }
       for (let i = 1; i < path.length; i++) {
         if (path[i].time <= path[i - 1].time) {
@@ -376,7 +381,8 @@
     label: 'INET/OMNeT++ BonnMotion',
     filename: 'mobility-bonnmotion.movements',
     mimeType: 'text/plain',
-    outputHint: 'INET BonnMotionMobility (one t x y triplet sequence per host line)',
+    outputHint: 'INET BonnMotionMobility (t x y, or t x y z with is3D=true)',
+    warnings(scenario) { return scenario.waypoints.some(p=>Math.abs(p.z)>EPSILON) ? ['This trace includes Z. Set is3D=true in each consuming INET BonnMotionMobility module.'] : []; },
     validate(scenario) {
       return validateCanonicalScenario(scenario).concat(inetExtraValidation(scenario));
     },
@@ -390,6 +396,7 @@
           const mapped = simulatorPoint(point);
           const time = scenario.scenario === 'fixed' ? 0 : point.time;
           values.push(formatNumber(time), formatNumber(mapped.x), formatNumber(mapped.y));
+          if(scenario.waypoints.some(p=>Math.abs(p.z)>EPSILON)) values.push(formatNumber(mapped.z));
         });
         return values.join(' ');
       }).join('\n');

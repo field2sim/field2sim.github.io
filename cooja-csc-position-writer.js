@@ -90,7 +90,7 @@
     const lastTimes = new Map();
     const rows = trace.trim().split(/\r?\n/).map(row => {
       const fields = row.trim().split(/\s+/).map(Number);
-      if (fields.length !== 5 || !fields.every(Number.isFinite) || !Number.isSafeInteger(fields[0]) || fields[0] < 0 || fields[1] < 0 || fields[1] < lastTime || fields[4] !== 0) throw new Error('Expected a planar mobile trace with increasing timestamps.');
+      if (fields.length !== 5 || !fields.every(Number.isFinite) || !Number.isSafeInteger(fields[0]) || fields[0] < 0 || fields[1] < 0 || fields[1] < lastTime) throw new Error('Expected a mobile trace with increasing timestamps.');
       lastTime = fields[1];
       const id = fields[0] + 1;
       if (lastTimes.has(id) && fields[1] <= lastTimes.get(id)) throw new Error(`Node ${id} timestamps must increase.`);

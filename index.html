@@ -10,6 +10,7 @@
   <script src="vendor/leaflet/leaflet.js"></script>
   <script src="coordinate-core.js"></script>
   <script src="node-groups.js"></script>
+  <script src="elevation-client.js"></script>
   <script src="simulator-adapters.js"></script>
   <script src="propagation-profiles.js"></script>
   <script src="propagation-adapters.js"></script>
@@ -34,15 +35,20 @@
     #map { position: absolute; inset: 0; z-index: 0; }
     canvas#grid { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
 
-    #sidebar { width: 340px; padding: 10px; background: #fff; border-left: 1px solid #ccc; display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow-y: scroll; height: 100vh; }
+    #sidebar { width: 420px; flex-shrink: 0; padding: 10px; background: #fff; border-left: 1px solid #ccc; display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow-y: scroll; height: 100vh; }
     .app-brand { padding-bottom: 9px; border-bottom: 1px solid #dbe3ec; }
     .app-brand strong { display: block; color: #0b1f33; font-size: 20px; letter-spacing: -0.2px; }
     .app-brand span { display: block; margin-top: 3px; color: #5b677a; font-size: 11px; line-height: 1.35; }
-    #controls label { display: inline-block; width: 110px; }
-    #customOriginControls { margin-top: 8px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: #fafafa; }
-    #customOriginControls label { width: 95px; }
-    #customOriginControls input { width: 185px; }
-    #controls input, #controls select { width: 200px; }
+    #controls { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 12px 8px; align-items: center; }
+    #controls > br { display: none; }
+    #controls label { width: auto; }
+    #originStatus { grid-column: 2; margin: 0 !important; }
+    #customRadiusControls { grid-column: 1 / -1; }
+    #customRadiusControls label { display: inline-block; width: 114px; }
+    #customRadiusControls input { width: calc(100% - 119px) !important; }
+    #sidebar input, #sidebar select, #sidebar textarea { box-sizing: border-box; }
+    #controls input, #controls select { width: 100%; min-width: 0; }
+    #sidebar > * { min-width: 0; }
     .output-container { display: flex; flex-direction: column; flex: 0 0 auto; }
     #output { flex: 0 0 160px; overflow-y: scroll; font-family: monospace; white-space: pre; border: 1px solid #ccc; padding: 5px; min-height: 0; }
     .output-header { display: flex; align-items: center; gap: 8px; }
@@ -68,6 +74,7 @@
     .propagation-profile-panel summary { cursor: pointer; font-size: 12px; font-weight: 600; }
     #propagationProfileSources a { display: block; margin-top: 3px; overflow-wrap: anywhere; }
     .btnrow { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btnrow > button { flex: 1 1 auto; }
     button { padding: 6px 10px; }
     #uploadInput { display: none; }
     .toggle-group { display: flex; gap: 0; border: 1px solid #ccc; border-radius: 4px; overflow: hidden; }
@@ -388,17 +395,11 @@
         <label for="originModeSelect">XY Origin:</label>
         <select id="originModeSelect">
           <option value="first" selected>First input row</option>
-          <option value="custom">Custom WGS84 point</option>
+          <option value="custom">Selected origin node</option>
         </select>
-        <div id="customOriginControls" style="display:none;">
-          <label for="originLatInput">Latitude:</label>
-          <input type="number" id="originLatInput" min="-90" max="90" step="any" placeholder="41.2867"><br><br>
-          <label for="originLngInput">Longitude:</label>
-          <input type="number" id="originLngInput" min="-180" max="180" step="any" placeholder="36.3300"><br><br>
-          <label for="originAltInput">Altitude (m):</label>
-          <input type="number" id="originAltInput" step="any" value="0"><br><br>
-          <button id="useMapCenterOriginBtn" type="button">Use map center</button>
-        </div>
+        <input id="originLatInput" type="hidden">
+        <input id="originLngInput" type="hidden">
+        <input id="originAltInput" type="hidden" value="0">
         <div id="originStatus" class="hint" style="margin:6px 0 10px 114px;">
           Origin is the first valid input row.
         </div>
@@ -431,14 +432,27 @@
       </div>
       <div>
         <div class="input-header">
-          <label for="latlngInput"><b>Latitude/Longitude Input</b></label>
+          <label for="latlngInput"><b>Latitude/Longitude/Altitude Input</b></label>
           <button id="uploadBtn">Upload .dat</button>
         </div>
         <div class="hint" style="margin: 6px 0 6px; text-align: right;">Upload .dat expects Cooja's <code>positions.dat</code>: <code>node_id time x y z</code> (meters) — not latitude/longitude.</div>
         <div id="autoNodeIdsControl" hidden style="margin: 6px 0; font-size: 12px;">
           <label><input type="checkbox" id="autoNodeIds"> Automatically number following rows after a Node ID edit</label>
         </div>
-        <textarea id="latlngInput" placeholder="&lt;node_id&gt; &lt;time&gt; &lt;latitude&gt; &lt;longitude&gt;&#10;Example:&#10;1 0.0 41.2867 36.33&#10;1 1.0 41.2870 36.331" style="box-sizing: border-box; width: 100%; height: 150px; font-family: monospace; font-size: 12px; padding: 5px; border: 1px solid #ccc; resize: vertical;"></textarea>
+        <div style="margin: 6px 0; font-size: 12px;">
+          <label><input type="checkbox" id="experimental3d"> Enable 3D export (experimental)</label>
+          <div class="hint">Off: no elevation requests; export Z = 0. On: fetch surface elevations and export origin-relative Z. Applies to all Node Groups.</div>
+          <details class="hint"><summary>3D simulator compatibility</summary>
+            ns-3 support depends on the mobility model. Changing-Z traces did not reproduce the intended route with the tested ns-3.47 Ns2MobilityHelper.
+            Cooja Mobility does not read Z in the tested plugin; enabling it requires modifying and rebuilding the plugin to read and apply Z. This checkbox does not modify Cooja. Static CSC positions support Z.
+            INET requires is3D=true for 3D traces. Experimental 3D use and validation of the chosen simulator configuration are the user's responsibility.
+          </details>
+        </div>
+        <textarea id="latlngInput" wrap="off" placeholder="&lt;node_id&gt; &lt;time&gt; &lt;latitude&gt; &lt;longitude&gt; [altitude_m]&#10;Example:&#10;1 0.0 41.2867 36.33&#10;1 1.0 41.2870 36.331" style="box-sizing: border-box; width: 100%; height: 150px; font-family: monospace; font-size: 12px; padding: 5px; border: 1px solid #ccc; resize: vertical;"></textarea>
+        <div class="hint" style="margin-top:6px">
+          <span id="elevationStatus" role="status" aria-live="polite"></span>
+          <div>Elevation: OpenTopoData / Mapzen · <a href="https://iotlab.omu.edu.tr/elevation/license" target="_blank" rel="noopener" title="Coordinates are sent to OpenTopoData and cached by IoTlab for up to 30 days.">Sources and licenses</a></div>
+        </div>
         <div style="margin-top: 8px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px;">
           <label for="simExportSelect"><b>Simulator</b></label>
           <select id="simExportSelect" style="flex: 1; min-width: 0; padding: 4px 8px;">
@@ -560,11 +574,9 @@
     const nodeInput = document.getElementById('nodeIdInput');
     const intervalInput = document.getElementById('intervalInput');
     const originModeSelect = document.getElementById('originModeSelect');
-    const customOriginControls = document.getElementById('customOriginControls');
     const originLatInput = document.getElementById('originLatInput');
     const originLngInput = document.getElementById('originLngInput');
     const originAltInput = document.getElementById('originAltInput');
-    const useMapCenterOriginBtn = document.getElementById('useMapCenterOriginBtn');
     const originStatus = document.getElementById('originStatus');
     const uploadInput = document.getElementById('uploadInput');
     const uploadBtn = document.getElementById('uploadBtn');
@@ -747,6 +759,12 @@
       origin: { mode: 'first', lat: null, lng: null, alt: 0 },
       waypoints: []
     };
+    var elevationRecords = new Map();
+    try { for (const r of JSON.parse(localStorage.getItem('field2sim-elevations-v1') || '[]')) {
+      if (r?.result && Date.now()-Date.parse(r.result.fetched_at)<(r.result.status==='no_data'?3600000:2592000000)) elevationRecords.set(r.key,r);
+    } } catch (_) {}
+    var elevationController = null;
+    var elevationAutoTimer = null, elevationAutoSignature = null, elevationLastStarted = 0;
     let nodeGroups = [{id:'initial',name:'Mobile 1',type:'mobile',points:[]}];
     let activeNodeGroupId = 'initial';
     let switchingNodeGroup = false;
@@ -803,10 +821,10 @@
     }
 
     function formatWaypointRows() {
-      const includeAltitude = positions.some(p => Math.abs(p.z || 0) > 1e-12);
+      const includeAltitude = document.getElementById('experimental3d').checked && (nodeGroups.find(g=>g.id===activeNodeGroupId)?.altitudeReference==='mapzen-surface' || positions.some(p => Math.abs(p.z || 0) > 1e-12));
       return positions.map((p, i) => {
         const base = `${p.nodeId} ${waypointTime(p, i).toFixed(9)} ${p.lat.toFixed(9)} ${p.lng.toFixed(9)}`;
-        return includeAltitude ? `${base} ${(p.z || 0).toFixed(3)}` : base;
+        return includeAltitude ? `${base} ${(p.z || 0).toFixed(0)}` : base;
       }).join('\n');
     }
 
@@ -845,7 +863,6 @@
 
     function renderOriginUi() {
       const custom = originModeSelect.value === 'custom';
-      customOriginControls.style.display = custom ? 'block' : 'none';
       scenarioModel.origin.mode = custom ? 'custom' : 'first';
       if (custom) {
         try {
@@ -880,10 +897,7 @@
     originLatInput.addEventListener('input', handleOriginChange);
     originLngInput.addEventListener('input', handleOriginChange);
     originAltInput.addEventListener('input', handleOriginChange);
-    useMapCenterOriginBtn.addEventListener('click', () => {
-      const center = map.getCenter();
-      setCustomOrigin({ lat: center.lat, lng: center.lng, alt: 0 });
-    });
+
     intervalInput.addEventListener('change', () => {
       positions.forEach((point, index) => {
         if (point.timeGenerated) point.time = index * intervalSeconds();
@@ -893,11 +907,81 @@
     });
     renderOriginUi();
 
+    function elevationGroups(scope='all') {
+      return nodeGroups.filter(g=>scope==='all'||g.id===activeNodeGroupId).map(g=>{
+        const draft=g.id===activeNodeGroupId?latlngInput.value:g.draft;
+        return {...g,points:typeof draft==='string'?Field2SimNodeGroups.parseRows(draft,g.type):g.points};
+      });
+    }
+    function currentElevation(p) {
+      const record=elevationRecords.get(Field2SimElevation.key(p));
+      return record && Date.now()-Date.parse(record.result.fetched_at)<(record.result.status==='no_data'?3600000:2592000000)?record:null;
+    }
+    async function fetchElevationIntoInput(scope='all',automatic=false){
+      if(!document.getElementById('experimental3d').checked || elevationController)return;
+      const status=document.getElementById('elevationStatus');
+      try {
+        clearTimeout(latlngInputTimeout); // Freeze the pending formatter before capturing query rows.
+        const queriedGroups=elevationGroups(scope);
+        elevationLastStarted=Date.now();
+        const requestState=JSON.stringify(queriedGroups.map(g=>({id:g.id,points:g.points})));
+        const points=queriedGroups.flatMap(g=>g.points);
+        if(!points.length)throw Error('Add nodes or waypoints first.');
+        elevationController=new AbortController();status.textContent='Fetching altitude…';
+        const timeout=setTimeout(()=>elevationController?.abort(),300000);
+        let records;
+        try {records=await Field2SimElevation.lookup(points.filter(p=>!currentElevation(p)),{signal:elevationController.signal,onProgress:(done,total)=>{status.textContent=`Fetched ${done} / ${total} unique locations…`;}});}
+        finally{clearTimeout(timeout);}
+        if(!document.getElementById('experimental3d').checked)return;
+        for(const r of records){elevationRecords.delete(r.key);elevationRecords.set(r.key,r);}
+        while(elevationRecords.size>20000)elevationRecords.delete(elevationRecords.keys().next().value);
+        let persisted=true;try{localStorage.setItem('field2sim-elevations-v1',JSON.stringify([...elevationRecords.values()]));}catch(_){persisted=false;}
+        // Do not overwrite edits or another group's draft while a request was running.
+        if(JSON.stringify(elevationGroups(scope).map(g=>({id:g.id,points:g.points})))!==requestState)throw Error('Coordinates or groups changed during lookup. Fetch again to fill the current input.');
+        if(!automatic)commitHistory();
+        clearTimeout(latlngInputTimeout);
+        let filled=0,missing=0;
+        for(const queried of queriedGroups){
+          const group=nodeGroups.find(g=>g.id===queried.id);
+          group.points=queried.points.map(p=>{
+            const record=currentElevation(p);
+            if(record?.result.status==='ok'){filled++;return {...p,z:record.result.elevation_m};}
+            missing++;return p;
+          });
+          if(group.points.some(p=>currentElevation(p)?.result.status==='ok'))group.altitudeReference='mapzen-surface';
+          group.draft=group.points.map(p=>`${p.nodeId} ${p.time.toFixed(9)} ${p.lat.toFixed(9)} ${p.lng.toFixed(9)} ${p.z.toFixed(0)}`).join('\n');
+          if(group.id===activeNodeGroupId){setPositions(group.points);latlngInput.value=group.draft;}
+        }
+        draw();updateOutput();
+        status.textContent=`Altitude added to ${filled} rows.${missing?' No data for '+missing+' rows; previous values retained.':''}${persisted?'':' Browser storage unavailable; results remain in this tab.'}`;
+      } catch(e){status.textContent=e.name==='AbortError'?'Elevation request cancelled or timed out.':e.message;}
+      finally{elevationController=null;scheduleElevation();}
+    }
+    function scheduleElevation(){
+      clearTimeout(elevationAutoTimer);
+      if(!document.getElementById('experimental3d').checked || elevationController)return;
+      let groups;
+      try {groups=elevationGroups('all');}catch(_){return;}
+      // Height writes and map navigation do not cause more network requests.
+      const signature=JSON.stringify(groups.map(g=>[g.id,g.points.map(p=>[p.nodeId,p.time,p.lat,p.lng])]));
+      if(signature===elevationAutoSignature)return;
+      if(!groups.some(g=>g.points.length)){elevationAutoSignature=signature;return;}
+      elevationAutoTimer=setTimeout(()=>{
+        elevationAutoSignature=signature;
+        fetchElevationIntoInput('all',true);
+      },Math.max(350,1100-(Date.now()-elevationLastStarted)));
+    }
     // Undo/Redo
     const undoStack = []; const redoStack = [];
-    const snapshot = () => { syncActiveNodeGroup(); return JSON.parse(JSON.stringify({ positions, scenario, origin: scenarioModel.origin, nodeGroups, activeNodeGroupId })); };
+    const snapshot = () => { syncActiveNodeGroup(); return JSON.parse(JSON.stringify({ positions, scenario, origin: scenarioModel.origin, nodeGroups, activeNodeGroupId, experimental3d: document.getElementById('experimental3d').checked })); };
     function commitHistory(state = snapshot()){ undoStack.push(JSON.parse(JSON.stringify(state))); if (undoStack.length>200) undoStack.shift(); redoStack.length=0; }
     function restore(state){
+      clearTimeout(elevationAutoTimer);
+      elevationController?.abort();
+      elevationAutoSignature = null;
+      if (typeof state.experimental3d === 'boolean') document.getElementById('experimental3d').checked = state.experimental3d;
+      document.getElementById('elevationStatus').textContent = '';
+
       if (state.nodeGroups?.length) { nodeGroups = JSON.parse(JSON.stringify(state.nodeGroups)); activeNodeGroupId = state.activeNodeGroupId; }
       else { nodeGroups = [{id:'initial',name:state.scenario === 'fixed' ? 'Static 1':'Mobile 1',type:state.scenario || 'mobile',points:state.positions || []}]; activeNodeGroupId = 'initial'; }
 
@@ -910,7 +994,7 @@
       else { originModeSelect.value = 'first'; renderOriginUi(); }
       refreshLatLngInput();
       const restoredGroup=nodeGroups.find(g=>g.id===activeNodeGroupId);
-      if(typeof restoredGroup?.draft==='string')latlngInput.value=restoredGroup.draft;
+      if(typeof restoredGroup?.draft==='string' && document.getElementById('experimental3d').checked)latlngInput.value=restoredGroup.draft;
       if(restoredGroup?.interval)intervalInput.value=restoredGroup.interval;
       renderNodeGroups();
       updatePolygonMobileControlsVisibility();
@@ -974,6 +1058,24 @@
       }
       return Number.parseFloat(circleRadiusSelect.value) || 10;
     }
+
+    document.getElementById('experimental3d').addEventListener('change', () => {
+      const previous = snapshot();
+      previous.experimental3d = !document.getElementById('experimental3d').checked;
+      commitHistory(previous);
+      refreshLatLngInput();
+      persistSessionStateDebounced();
+      clearTimeout(elevationAutoTimer);
+      elevationAutoSignature = null;
+      if (!document.getElementById('experimental3d').checked) {
+        elevationController?.abort();
+        document.getElementById('elevationStatus').textContent = '';
+      }
+      clearOutputPreview();
+      staticCoojaPositions = null;
+      mobileCoojaTrace = null;
+      scheduleElevation();
+    });
 
     circleRadiusSelect.addEventListener('change', renderCircleRadiusUi);
     renderCircleRadiusUi();
@@ -1646,7 +1748,7 @@
     // Context menu on right click
     map.on('contextmenu', (e) => {
       e.originalEvent.preventDefault();
-      if (mode !== 'point') return;
+      // Existing-node actions are available in every work mode.
       
       const pt = map.latLngToContainerPoint(e.latlng);
       const i = hitTestNodeMap(pt.x, pt.y);
@@ -1930,32 +2032,37 @@
             const center = map.getCenter();
             importOrigin = { lat: center.lat, lng: center.lng, alt: 0 };
             setCustomOrigin(importOrigin);
-            originStatus.textContent += ' Imported XY data was anchored here because .dat does not store a geographic origin.';
+            originStatus.textContent += ' Map center is the custom import origin (altitude 0 m), because .dat does not store a geographic origin.';
           }
         } catch (error) {
           alert(error.message);
           return;
         }
 
-        const imported = parsedImport.waypoints.map(localPoint => {
-          const ll = enuToGeodetic(
-            { east: localPoint.x, north: localPoint.y, up: localPoint.z },
-            importOrigin
-          );
+        let imported;
+        try { imported = parsedImport.waypoints.map(localPoint => {
+          const ll = coordinateCore.localToGeographic(localPoint, importOrigin);
           return {
             lat: ll.lat,
             lng: ll.lng,
             nodeId: localPoint.nodeId,
             time: localPoint.time,
-            z: localPoint.z,
+            z: ll.alt,
             timeGenerated: false
           };
-        });
+        }); } catch(error) {
+          alert(`Cannot import Cooja positions: ${error.message}`);
+          uploadInput.value = '';
+          return;
+        }
 
         setPositions(imported);
         selected.clear();
         lastClickedIndex = -1;
         refreshLatLngInput();
+        // Retain imported heights until geometry is edited, rather than immediately replacing them with DEM values.
+        clearTimeout(elevationAutoTimer);
+        elevationAutoSignature=JSON.stringify(elevationGroups('all').map(g=>[g.id,g.points.map(p=>[p.nodeId,p.time,p.lat,p.lng])]));
         if (positions.length) {
           map.fitBounds(L.latLngBounds(positions.map(p => [p.lat, p.lng])), { padding: [50, 50], maxZoom: 18 });
         }
@@ -2545,6 +2652,7 @@
     }
 
     function updateOutput(){
+      scheduleElevation();
       clearOutputPreview();
       persistSessionStateDebounced();
       if (propagationEnvironmentSelect.options.length) renderPropagationProfileUi();
@@ -2564,12 +2672,12 @@
         syncActiveNodeGroup();
         const groups=window.Field2SimNodeGroups.collect(nodeGroups);
         const all=groups.flatMap(g=>g.points);if(!all.length){updateOutput();return;}
-        const origin=resolveOrigin(all),staticPoints=[],traces=[];
+        const origin=resolveOrigin(all),staticPoints=[],traces=[],warnings=[];
         for(const group of groups){
           if(!group.points.length)continue;
-          const local=group.points.map(p=>{const enu=geodeticToEnu({lat:p.lat,lng:p.lng,alt:p.z},origin);return {nodeId:p.nodeId,time:p.time,x:enu.east,y:enu.north,z:p.z-origin.alt}});
+          const local=group.points.map(p=>{const enu=geodeticToEnu({lat:p.lat,lng:p.lng,alt:0},{...origin,alt:0});return {nodeId:p.nodeId,time:p.time,x:enu.east,y:enu.north,z:document.getElementById('experimental3d').checked?p.z-origin.alt:0}});
           if(group.type==='fixed')staticPoints.push(...window.Field2SimCscPositionWriter.createStaticArtifact(local).positions);
-          else {const a=createArtifact('cooja',{scenario:'mobile',waypoints:local});traces.push(...a.text.trim().split(/\r?\n/));}
+          else {const a=createArtifact('cooja',{scenario:'mobile',waypoints:local});warnings.push(...a.warnings);traces.push(...a.text.trim().split(/\r?\n/));}
         }
         traces.sort((a,b)=>Number(a.split(/\s+/)[1])-Number(b.split(/\s+/)[1])||Number(a.split(/\s+/)[0])-Number(b.split(/\s+/)[0]));
         staticCoojaPositions=staticPoints.length?staticPoints:null;mobileCoojaTrace=traces.length?traces.join('\n'):null;
@@ -2577,7 +2685,7 @@
         output.dataset.kind='export';output.dataset.exportTool='cooja';output.dataset.exportFilename='positions.dat';output.dataset.exportMimeType='text/plain';
         outputHeaderLabel.textContent='Output preview — all Node Groups';
         output.textContent=[...(staticPoints.length?['# Static: mote ID x y z',...staticPoints.map(p=>`${p.nodeId} ${p.x} ${p.y} ${p.z}`)]:[]),...(traces.length?['# Mobile: provisional index time x y z (resolved against CSC on save)',...traces]:[])].join('\n');
-        showExportCompatibilityWarnings(['Cooja export includes all groups using one geographic origin.',...(traces.length?['Mobile routes share one cycle ending at the latest timestamp. Shorter routes hold their last position until the shared cycle restarts.']:[])]);
+        showExportCompatibilityWarnings([...new Set(warnings),'Cooja export includes all groups using one geographic origin.',...(traces.length?['Mobile routes share one cycle ending at the latest timestamp. Shorter routes hold their last position until the shared cycle restarts.']:[])]);
       }catch(error){clearOutputPreview();alert(`Cannot export Node Groups: ${error.errors?.join(' ') || error.message}`);}
     }
 
@@ -2651,15 +2759,15 @@
         return;
       }
 
-      // WGS84 ECEF -> local ENU. This is independent of map center, pan and zoom.
+      // Project XY at zero height; export input altitude relative to origin separately as Z.
       const localPoints = parsedPoints.map(p => {
-        const enu = geodeticToEnu({ lat: p.lat, lng: p.lng, alt: p.z }, origin);
+        const enu = geodeticToEnu({ lat: p.lat, lng: p.lng, alt: 0 }, {...origin, alt: 0});
         return {
           nodeId: p.nodeId,
           time: p.time,
           x: enu.east,
           y: enu.north,
-          z: p.z - origin.alt
+          z: document.getElementById('experimental3d').checked ? p.z - origin.alt : 0
         };
       });
 

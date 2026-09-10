@@ -9,6 +9,18 @@ Field2Sim is a client-side, browser-based editor that translates field context i
 
 No application server is required. Leaflet is bundled locally; OpenStreetMap tiles and Nominatim place search still require network access.
 
+## Run locally with Python
+
+From the repository root (the directory containing `index.html`), run:
+
+```bash
+python3 -m http.server 8766 --bind 127.0.0.1
+```
+
+Open **http://127.0.0.1:8766/** in a modern browser. Keep the terminal open; press **Ctrl+C** to stop the server. No build or Python package installation is needed. If the port is occupied, choose another port in both the command and URL.
+
+**Enable 3D export (experimental)** above the geographic input is off by default: no elevation requests are sent and exports use Z=0. Enable it to retrieve surface elevations and export origin-relative Z. Simulator compatibility is explained beside the checkbox. Map tiles, place search, and enabled elevation lookup require internet access.
+
 ## Current features
 
 ### Geographic scenario authoring
@@ -24,10 +36,10 @@ No application server is required. Leaflet is bundled locally; OpenStreetMap til
 
 | Target | Generated artifact | Supported scope |
 |---|---|---|
-| Cooja Mobility | `positions.dat` | Planar mobile trace with explicit zero-based mote-array indexing and cyclic-plugin warnings. |
-| ns-2 | `mobility-ns2.tcl` | Static initialization and planar `setdest` mobility. |
-| ns-3 | `mobility-ns3.tcl` | Static and planar mobile input for `Ns2MobilityHelper`. |
-| INET/OMNeT++ | `mobility-bonnmotion.movements` | Planar BonnMotion `t x y` triplets. |
+| Cooja Mobility | `positions.dat` | Five-column mobile trace with zero-based mote-array indexing and cyclic-plugin warnings. The tested plugin ignores Z; static groups update CSC XYZ directly. |
+| ns-2 | `mobility-ns2.tcl` | XYZ initialization, planar `setdest` and timed Z updates; elevated checks passed. |
+| ns-3 | `mobility-ns3.tcl` | Static XYZ and planar mobile input for `Ns2MobilityHelper`. Changing-Z support is experimental and depends on the model/consumer. |
+| INET/OMNeT++ | `mobility-bonnmotion.movements` | 2D `t x y` triplets or 3D `t x y z` quadruples with `is3D=true`; elevated checks passed. |
 
 Each adapter validates its own dimensionality, identifier, and timing restrictions before export. A file-format check is not presented as proof of compatibility with arbitrary simulator releases.
 

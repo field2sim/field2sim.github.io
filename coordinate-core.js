@@ -113,6 +113,28 @@
     return ecefToGeodetic({ x: o.x + dx, y: o.y + dy, z: o.z + dz });
   }
 
+  // Invert the zero-height horizontal projection on the near side of WGS84.
+  // The local Z is an altitude difference, not an ENU up component.
+  function localToGeographic(point, origin) {
+    ['x', 'y', 'z'].forEach(axis => assertFinite(point[axis], `point.${axis}`));
+    validateGeodetic(origin, 'origin');
+    const lat = origin.lat * DEG_TO_RAD, lng = origin.lng * DEG_TO_RAD;
+    const sl = Math.sin(lat), cl = Math.cos(lat), so = Math.sin(lng), co = Math.cos(lng);
+    const base = geodeticToEcef({...origin, alt:0});
+    const q = [base.x-so*point.x-sl*co*point.y,
+      base.y+co*point.x-sl*so*point.y, base.z+cl*point.y];
+    const up = [cl*co, cl*so, sl];
+    const radii2 = [WGS84_A**2, WGS84_A**2, WGS84_A**2*(1-WGS84_E2)];
+    const a = up.reduce((sum,v,i)=>sum+v*v/radii2[i],0);
+    const b = 2*up.reduce((sum,v,i)=>sum+v*q[i]/radii2[i],0);
+    const c = q.reduce((sum,v,i)=>sum+v*v/radii2[i],0)-1;
+    const discriminant = b*b-4*a*c;
+    if(discriminant < 0) throw new RangeError('Local XY lies outside the origin’s WGS84 projection.');
+    const u = -2*c/(b+Math.sqrt(discriminant));
+    const ll = ecefToGeodetic({x:q[0]+u*up[0], y:q[1]+u*up[1], z:q[2]+u*up[2]});
+    return {lat:ll.lat, lng:ll.lng, alt:point.z+(origin.alt ?? 0)};
+  }
+
   return Object.freeze({
     WGS84_A,
     WGS84_F,
@@ -121,6 +143,7 @@
     ecefToGeodetic,
     geodeticToEnu,
     enuToGeodetic,
+    localToGeographic,
     validateGeodetic
   });
 });
