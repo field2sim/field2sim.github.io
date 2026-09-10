@@ -236,6 +236,7 @@
       font-size: 12px;
       color: #999;
     }
+    .leaflet-container .leaflet-control-attribution { font-size: 10px; }
   </style>
 </head>
 <body>
@@ -693,6 +694,7 @@
       attribution: '&copy; OpenStreetMap contributors'
     });
     tileLayer.addTo(map);
+    map.attributionControl.addAttribution('Elevation: <a href="https://www.opentopodata.org/" target="_blank" rel="noopener">OpenTopoData</a> / <a href="https://www.opentopodata.org/datasets/mapzen/" target="_blank" rel="noopener">Mapzen</a> · <a href="https://iotlab.omu.edu.tr/elevation/license" target="_blank" rel="noopener">Sources &amp; licenses</a>');
 
     document.getElementById('toggleNodeGroupsBtn').addEventListener('click', () => {
       const panel = document.getElementById('nodeGroupsPanel');
