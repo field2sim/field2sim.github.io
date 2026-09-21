@@ -8,6 +8,7 @@
   <!-- Leaflet (vendored locally in vendor/leaflet/ — see vendor/leaflet/README.md) -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css"/>
   <script src="vendor/leaflet/leaflet.js"></script>
+  <script src="map-provider-config.js"></script>
   <script src="coordinate-core.js"></script>
   <script src="node-groups.js"></script>
   <script src="elevation-client.js"></script>
@@ -237,6 +238,7 @@
       color: #999;
     }
     .leaflet-container .leaflet-control-attribution { font-size: 10px; }
+    .basemap-note { max-width: 220px; margin-top: 4px; font-size: 10px; color: #555; }
   </style>
 </head>
 <body>
@@ -691,9 +693,131 @@
 
     const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
-      attribution: '&copy; OpenStreetMap contributors'
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
     });
     tileLayer.addTo(map);
+    const satelliteLayer = L.tileLayer('https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2025_3857/default/g/{z}/{y}/{x}.jpg', {
+      maxZoom: 19,
+      // Enlarge the 10 m imagery at close zooms rather than implying extra detail.
+      maxNativeZoom: 14,
+      attribution: '<a href="https://cloudless.eox.at">EOxCloudless</a> by <a href="https://eox.at">EOX IT Services GmbH</a> (Contains modified Copernicus Sentinel data 2025) · <a href="https://maps.eox.at">EOX::Maps</a> · <a href="https://cloudless.eox.at/documentation/license">CC BY-NC-SA 4.0 / non-commercial</a>'
+    });
+    const basemapControl = L.control({position: 'topright'});
+    const providerLayers = {street: tileLayer, eox: satelliteLayer};
+    let activeBasemap = 'street';
+    let basemapRequest = 0;
+    basemapControl.onAdd = () => {
+      const panel = L.DomUtil.create('div', 'leaflet-control-layers leaflet-control-layers-expanded');
+      panel.id = 'basemapControl';
+      panel.innerHTML = `<fieldset style="border:0;padding:0;margin:0"><legend class="sr-only">Map background</legend>
+        <label><input type="radio" name="basemap" value="street" checked> Street</label>
+        <label><input type="radio" name="basemap" value="eox"> Satellite (EOX)</label>
+        <label><input type="radio" name="basemap" value="esri"> Satellite (Esri)</label>
+        <label><input type="radio" name="basemap" value="maptiler"> Satellite (MapTiler Free)</label>
+        </fieldset>
+        <form id="basemapKeyForm" hidden style="margin-top:6px;max-width:220px">
+          <label for="basemapKey">Provider API key</label>
+          <input id="basemapKey" type="password" autocomplete="off" spellcheck="false" required style="width:100%;box-sizing:border-box">
+          <button type="submit">Apply</button> <button type="button" id="basemapCancel">Cancel</button>
+          <div class="basemap-note">Used for this page only. <a id="basemapSignup" target="_blank" rel="noopener">Get a key</a></div>
+        </form>
+        <div id="basemapStatus" class="basemap-note" role="status"></div>`;
+      L.DomEvent.disableClickPropagation(panel);
+      L.DomEvent.disableScrollPropagation(panel);
+      return panel;
+    };
+    basemapControl.addTo(map);
+    const basemapPanel = basemapControl.getContainer();
+    const basemapNote = document.getElementById('basemapStatus');
+    const keyForm = document.getElementById('basemapKeyForm');
+    const keyInput = document.getElementById('basemapKey');
+    let pendingProvider = null;
+    const providerNotes = {street: '', eox: '10 m imagery · Non-commercial use',
+      esri: 'Esri account quota applies.', maptiler: 'MapTiler account quota applies; Free is non-commercial.'};
+    // Keep provider attribution text and HTTPS links, never arbitrary remote HTML.
+    function safeMapAttribution(html) {
+      const parsed = new DOMParser().parseFromString(String(html || ''), 'text/html');
+      const output = document.createElement('span');
+      function copy(node, parent) {
+        if (node.nodeType === Node.TEXT_NODE) { parent.appendChild(document.createTextNode(node.textContent)); return; }
+        if (node.nodeType !== Node.ELEMENT_NODE || ['SCRIPT','STYLE'].includes(node.tagName)) return;
+        let target = parent;
+        if (node.tagName === 'A' && /^https:\/\//i.test(node.getAttribute('href') || '')) {
+          target = document.createElement('a'); target.href = node.getAttribute('href');
+          target.target = '_blank'; target.rel = 'noopener'; parent.appendChild(target);
+        }
+        node.childNodes.forEach(child => copy(child, target));
+      }
+      parsed.body.childNodes.forEach(node => copy(node, output));
+      return output.innerHTML;
+    }
+    function showBasemap(id) {
+      const previous = providerLayers[activeBasemap];
+      providerLayers[id].addTo(map);
+      if (previous !== providerLayers[id]) map.removeLayer(previous);
+      activeBasemap = id;
+      basemapPanel.querySelector(`input[value="${id}"]`).checked = true;
+      basemapNote.textContent = providerNotes[id];
+      keyForm.hidden = true; keyInput.value = ''; pendingProvider = null;
+    }
+    function watchBasemapErrors(layer, id) {
+      layer.on('tileerror', () => {
+        if (activeBasemap === id) basemapNote.textContent = 'Tile unavailable. Check provider quota/key or select Street.';
+      });
+    }
+    watchBasemapErrors(satelliteLayer, 'eox');
+    basemapPanel.querySelectorAll('input[name="basemap"]').forEach(radio => radio.addEventListener('change', () => {
+      ++basemapRequest;
+      const id = radio.value;
+      if (providerLayers[id]) { showBasemap(id); return; }
+      const sharedKey = id === 'esri' ? window.FIELD2SIM_MAP_CONFIG?.esriApiKey : '';
+      if (sharedKey) { keyForm.hidden = true; pendingProvider = null; loadBasemapProvider(id, sharedKey); return; }
+      pendingProvider = id;
+      keyForm.hidden = false; keyInput.value = '';
+      keyForm.querySelector('label').textContent = `${id === 'esri' ? 'Esri' : 'MapTiler'} API key`;
+      document.getElementById('basemapSignup').href = id === 'esri' ? 'https://location.arcgis.com/' : 'https://cloud.maptiler.com/';
+      basemapNote.textContent = 'Enter your key to load this layer. Current background stays visible.';
+      keyInput.focus();
+    }));
+    document.getElementById('basemapCancel').addEventListener('click', () => { ++basemapRequest; showBasemap(activeBasemap); });
+    keyForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      const id = pendingProvider, key = keyInput.value.trim();
+      if (!id || !key) return;
+      await loadBasemapProvider(id, key);
+    });
+    async function loadBasemapProvider(id, key) {
+      const request = ++basemapRequest;
+      basemapNote.textContent = 'Checking provider access…';
+      try {
+        let url, options;
+        if (id === 'maptiler') {
+          const response = await fetch(`https://api.maptiler.com/tiles/satellite-v4/tiles.json?key=${encodeURIComponent(key)}`, {signal: AbortSignal.timeout(15000)});
+          if (!response.ok) throw new Error('access');
+          const data = await response.json();
+          url = data.tiles?.[0];
+          if (!url || !url.startsWith('https://api.maptiler.com/')) throw new Error('metadata');
+          if (!url.includes('key=')) url += `${url.includes('?') ? '&' : '?'}key=${encodeURIComponent(key)}`;
+          options = {maxZoom:19, maxNativeZoom:Math.min(19, Number(data.maxzoom) || 19),
+            attribution: safeMapAttribution(data.attribution) + ' · <a href="https://www.maptiler.com/copyright/">© MapTiler</a> <a href="https://www.maptiler.com"><img src="https://api.maptiler.com/resources/logo.svg" alt="MapTiler logo" style="height:20px;vertical-align:middle"></a>'};
+        } else {
+          const service = 'https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer';
+          const response = await fetch(`${service}?f=json&token=${encodeURIComponent(key)}`, {signal: AbortSignal.timeout(15000)});
+          if (!response.ok) throw new Error('access');
+          const data = await response.json();
+          if (data.error || !data.tileInfo || !data.copyrightText) throw new Error('metadata');
+          url = `${service}/tile/{z}/{y}/{x}?token=${encodeURIComponent(key)}`;
+          options = {maxZoom:19, maxNativeZoom:Math.min(19, Math.max(...data.tileInfo.lods.map(lod => lod.level))),
+            attribution: '<a href="https://www.esri.com">Powered by Esri</a> · ' + safeMapAttribution(data.copyrightText)};
+        }
+        if (request !== basemapRequest) return;
+        providerLayers[id] = L.tileLayer(url, options);
+        watchBasemapErrors(providerLayers[id], id);
+        showBasemap(id);
+      } catch (_) {
+        if (request === basemapRequest) basemapNote.textContent = 'Could not load provider. Check key, allowed origins, quota and connection; then retry.';
+      }
+    }
     map.attributionControl.addAttribution('Elevation: <a href="https://www.opentopodata.org/" target="_blank" rel="noopener">OpenTopoData</a> / <a href="https://www.opentopodata.org/datasets/mapzen/" target="_blank" rel="noopener">Mapzen</a> · <a href="https://iotlab.omu.edu.tr/elevation/license" target="_blank" rel="noopener">Sources &amp; licenses</a>');
 
     document.getElementById('toggleNodeGroupsBtn').addEventListener('click', () => {

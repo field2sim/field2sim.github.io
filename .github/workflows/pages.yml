@@ -25,6 +25,16 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup Pages
         uses: actions/configure-pages@v5
+      - name: Configure shared Esri basemap key
+        env:
+          ESRI_API_KEY: ${{ secrets.ESRI_API_KEY }}
+        run: |
+          python3 - <<'PYCONFIG'
+          import json, os
+          from pathlib import Path
+          config = {"esriApiKey": os.environ.get("ESRI_API_KEY", "")}
+          Path("map-provider-config.js").write_text("window.FIELD2SIM_MAP_CONFIG = " + json.dumps(config) + ";\n")
+          PYCONFIG
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

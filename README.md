@@ -9,6 +9,12 @@ Field2Sim is a client-side, browser-based editor that translates field context i
 
 No application server is required. Leaflet is bundled locally; OpenStreetMap tiles and Nominatim place search still require network access.
 
+The top-right background selector offers **Street**, **Satellite (EOX)**, **Satellite (Esri)**, and **Satellite (MapTiler Free)** without changing node groups, routes, coordinate origin, or exports. Street is the default. EOX imagery has approximately 10 m ground resolution; closer zooms enlarge it rather than reveal finer detail. These visual layers do not supply elevation or alter propagation parameters.
+
+MapTiler and unconfigured local installations require your own provider API key. The hosted site can supply a shared Esri key through its deployment configuration. For manual configuration, select the layer and enter the key in the map control; the current background stays visible until access is validated. Manually entered keys are held only in the open page, are sent to the chosen provider, and are not saved in browser storage, source files, or scenario exports. Reloading clears manually entered keys. Use browser/map-service keys with appropriate allowed-origin restrictions for your local address and deployment domain. Provider quotas and account terms apply; the “Free” label does not create a free account or guarantee unlimited access. Esri source credits and MapTiler source credits/logo are displayed with their respective layers. See [Esri access and pricing](https://location.arcgis.com/pricing/) and [MapTiler accounts and pricing](https://www.maptiler.com/cloud/pricing/). Image detail varies by location and provider.
+
+Satellite attribution: **EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2025)**. The imagery is available for non-commercial use under CC BY-NC-SA 4.0; commercial use requires a suitable EOX license. These imagery terms are separate from Field2Sim's software license. Keep the displayed attribution in screenshots and videos. See the [EOX license summary](https://cloudless.eox.at/documentation/license), [resolution documentation](https://cloudless.eox.at/documentation/introduction), and [EOX::Maps service conditions](https://maps.eox.at/). The public tile service is rate-limited and has no availability guarantee; Street remains available as an alternative.
+
 ## Run locally with Python
 
 From the repository root (the directory containing `index.html`), run:
@@ -76,3 +82,9 @@ Keep the visible OpenStreetMap attribution when capturing or redistributing map-
 > Field2Sim Project, “Field2Sim: A provenance-aware web-based scenario synthesizer for geo-grounded WSN simulations,” software and reproducibility artifact, 2026. Source: https://github.com/field2sim/field2sim. Live application: https://field2sim.github.io/
 
 License and complete attribution information are provided in the [source repository](https://github.com/field2sim/field2sim).
+
+### Shared Esri key on GitHub Pages
+
+In the publishing repository, open **Settings → Secrets and variables → Actions → New repository secret** and add `ESRI_API_KEY`. Use a dedicated basemap-only key restricted to the site's referrer. The Pages workflow generates `map-provider-config.js` from this secret before uploading the site. Selecting Esri then uses it automatically. Without this secret, the manual key field remains available.
+
+The secret is not committed or printed in build logs, but the deployed browser configuration and network requests expose the key to visitors. Referrer restrictions, minimal privileges, usage monitoring, and renewal before expiry remain necessary. Local development should use a separate key.
