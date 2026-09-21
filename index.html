@@ -770,7 +770,7 @@
       ++basemapRequest;
       const id = radio.value;
       if (providerLayers[id]) { showBasemap(id); return; }
-      const sharedKey = id === 'esri' ? window.FIELD2SIM_MAP_CONFIG?.esriApiKey : '';
+      const sharedKey = window.FIELD2SIM_MAP_CONFIG?.[id === 'esri' ? 'esriApiKey' : 'maptilerApiKey'];
       if (sharedKey) { keyForm.hidden = true; pendingProvider = null; loadBasemapProvider(id, sharedKey); return; }
       pendingProvider = id;
       keyForm.hidden = false; keyInput.value = '';
@@ -793,7 +793,7 @@
         let url, options;
         if (id === 'maptiler') {
           const response = await fetch(`https://api.maptiler.com/tiles/satellite-v4/tiles.json?key=${encodeURIComponent(key)}`, {signal: AbortSignal.timeout(15000)});
-          if (!response.ok) throw new Error('access');
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
           const data = await response.json();
           url = data.tiles?.[0];
           if (!url || !url.startsWith('https://api.maptiler.com/')) throw new Error('metadata');
@@ -803,7 +803,7 @@
         } else {
           const service = 'https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer';
           const response = await fetch(`${service}?f=json&token=${encodeURIComponent(key)}`, {signal: AbortSignal.timeout(15000)});
-          if (!response.ok) throw new Error('access');
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
           const data = await response.json();
           if (data.error || !data.tileInfo || !data.copyrightText) throw new Error('metadata');
           url = `${service}/tile/{z}/{y}/{x}?token=${encodeURIComponent(key)}`;
@@ -815,7 +815,10 @@
         watchBasemapErrors(providerLayers[id], id);
         showBasemap(id);
       } catch (_) {
-        if (request === basemapRequest) basemapNote.textContent = 'Could not load provider. Check key, allowed origins, quota and connection; then retry.';
+        if (request === basemapRequest) {
+          const status = /^HTTP \d{3}$/.test(_.message) ? ` (${_.message})` : '';
+          basemapNote.textContent = `Could not load provider${status}. Check key, quota and allowed origins for ${location.host}; then retry.`;
+        }
       }
     }
     map.attributionControl.addAttribution('Elevation: <a href="https://www.opentopodata.org/" target="_blank" rel="noopener">OpenTopoData</a> / <a href="https://www.opentopodata.org/datasets/mapzen/" target="_blank" rel="noopener">Mapzen</a> · <a href="https://iotlab.omu.edu.tr/elevation/license" target="_blank" rel="noopener">Sources &amp; licenses</a>');

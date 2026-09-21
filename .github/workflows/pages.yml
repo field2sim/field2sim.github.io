@@ -25,14 +25,15 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup Pages
         uses: actions/configure-pages@v5
-      - name: Configure shared Esri basemap key
+      - name: Configure shared basemap keys
         env:
           ESRI_API_KEY: ${{ secrets.ESRI_API_KEY }}
+          MAPTILER_API_KEY: ${{ secrets.MAPTILER_API_KEY }}
         run: |
           python3 - <<'PYCONFIG'
           import json, os
           from pathlib import Path
-          config = {"esriApiKey": os.environ.get("ESRI_API_KEY", "")}
+          config = {"esriApiKey": os.environ.get("ESRI_API_KEY", ""), "maptilerApiKey": os.environ.get("MAPTILER_API_KEY", "")}
           Path("map-provider-config.js").write_text("window.FIELD2SIM_MAP_CONFIG = " + json.dumps(config) + ";\n")
           PYCONFIG
       - name: Upload artifact
