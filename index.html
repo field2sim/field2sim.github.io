@@ -792,7 +792,7 @@
       try {
         let url, options;
         if (id === 'maptiler') {
-          const response = await fetch(`https://api.maptiler.com/tiles/satellite-v4/tiles.json?key=${encodeURIComponent(key)}`, {signal: AbortSignal.timeout(15000)});
+          const response = await fetch(`https://api.maptiler.com/tiles/satellite-v2/tiles.json?key=${encodeURIComponent(key)}`, {signal: AbortSignal.timeout(15000)});
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
           const data = await response.json();
           url = data.tiles?.[0];
