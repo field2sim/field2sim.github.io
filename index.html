@@ -702,7 +702,7 @@
       maxNativeZoom: 14,
       attribution: '<a href="https://cloudless.eox.at">EOxCloudless</a> by <a href="https://eox.at">EOX IT Services GmbH</a> (Contains modified Copernicus Sentinel data 2025) · <a href="https://maps.eox.at">EOX::Maps</a> · <a href="https://cloudless.eox.at/documentation/license">CC BY-NC-SA 4.0 / non-commercial</a>'
     });
-    const basemapControl = L.control({position: 'topright'});
+    const basemapControl = L.control({position: 'bottomleft'});
     const providerLayers = {street: tileLayer, eox: satelliteLayer};
     let activeBasemap = 'street';
     let basemapRequest = 0;
