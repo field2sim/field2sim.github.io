@@ -27,6 +27,10 @@ Open **http://127.0.0.1:8766/** in a modern browser. Keep the terminal open; pre
 
 **Enable 3D export (experimental)** above the geographic input is off by default: no elevation requests are sent and exports use Z=0. Enable it to retrieve surface elevations and export origin-relative Z. Simulator compatibility is explained beside the checkbox. Map tiles, place search, and enabled elevation lookup require internet access.
 
+## Portable projects and route preview
+
+Use **Save Project / Open Project** to carry the entire workspace in a `.field2sim` file, including all node groups, 2D/3D and origin settings, propagation controls, stored elevations and an optional CSC copy. Provider keys and local file permissions are excluded. **Examples** includes a two-group Central Park scenario. **Route playback · prototype** provides a shared timeline with play/pause, scrubbing and playback-speed controls; it does not change exported timestamps or simulate network behavior. See [project examples and file contents](examples/projects/README.md).
+
 ## Current features
 
 ### Geographic scenario authoring

@@ -11,6 +11,7 @@
   <script src="map-provider-config.js"></script>
   <script src="coordinate-core.js"></script>
   <script src="node-groups.js"></script>
+  <script src="project-core.js"></script>
   <script src="elevation-client.js"></script>
   <script src="simulator-adapters.js"></script>
   <script src="propagation-profiles.js"></script>
@@ -37,6 +38,10 @@
     canvas#grid { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
 
     #sidebar { width: 420px; flex-shrink: 0; padding: 10px; background: #fff; border-left: 1px solid #ccc; display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow-y: scroll; height: 100vh; }
+    .brand-row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    #projectMenu { position:relative; }
+    #projectMenu > summary { cursor:pointer; font-size:13px; padding:5px 9px; border:1px solid #cbd5e1; border-radius:5px; background:#f8fafc; color:#0b1f33; }
+    .project-dropdown { position:absolute; top:calc(100% + 6px); right:0; width:min(330px, calc(100vw - 40px)); box-sizing:border-box; background:white; border:1px solid #cbd5e1; border-radius:6px; padding:10px; box-shadow:0 5px 18px #0002; z-index:1100; }
     .app-brand { padding-bottom: 9px; border-bottom: 1px solid #dbe3ec; }
     .app-brand strong { display: block; color: #0b1f33; font-size: 20px; letter-spacing: -0.2px; }
     .app-brand span { display: block; margin-top: 3px; color: #5b677a; font-size: 11px; line-height: 1.35; }
@@ -352,7 +357,17 @@
 
     <div id="sidebar">
       <div class="app-brand">
-        <strong>Field2Sim</strong>
+        <div class="brand-row"><strong>Field2Sim</strong>
+          <details id="projectMenu"><summary>Project</summary>
+          <section id="projectControls" class="project-dropdown">
+        <div style="display:flex;gap:6px"><button id="openProjectBtn" style="flex:1">Open Project</button><button id="saveProjectBtn" style="flex:1">Save Project</button></div>
+        <input id="projectFileInput" type="file" accept=".field2sim" hidden>
+        <label for="projectExample" style="display:block;margin-top:6px">Examples</label>
+        <select id="projectExample" style="width:100%"><option value="">Choose an example…</option><option value="central-park">Central Park · sensors + mobile collector</option></select>
+        <div id="projectStatus" role="status" class="hint"></div>
+          </section>
+          </details>
+        </div>
         <span>From field context to reproducible network-simulation scenarios.</span>
       </div>
       <div id="searchContainer">
@@ -370,6 +385,14 @@
           <button class="toggle-button" id="scenarioFixed" data-value="fixed">Static</button>
         </div>
       </div>
+
+      <details id="playbackPanel" style="border:1px solid #cbd5e1;border-radius:6px;padding:8px;margin-bottom:8px">
+        <summary>Route playback · prototype</summary>
+        <div class="hint">All mobile groups · visual preview, not a network simulation. Times are seconds; shorter routes hold their final position.</div>
+        <div style="display:flex;gap:6px;margin:6px 0"><button id="playRouteBtn">▶ Play</button><button id="stopRouteBtn">■ Stop</button><select id="playbackSpeed" aria-label="Playback speed"><option value="1">1×</option><option value="5">5×</option><option value="20" selected>20×</option><option value="60">60×</option></select></div>
+        <input id="playbackTime" type="range" min="0" max="1" step="0.1" value="0" aria-label="Route time" style="width:100%">
+        <div id="playbackStatus" role="status" class="hint">Press Play to preview mobile routes.</div>
+      </details>
 
       <div>
         <label class="toggle-label"><b>Work Mode</b></label>
@@ -445,7 +468,7 @@
         <div style="margin: 6px 0; font-size: 12px;">
           <label><input type="checkbox" id="experimental3d"> Enable 3D export (experimental)</label>
           <div class="hint">Off: no elevation requests; export Z = 0. On: fetch surface elevations and export origin-relative Z. Applies to all Node Groups.</div>
-          <details class="hint"><summary>3D simulator compatibility</summary>
+          <details id="compatibilityDetails" class="hint"><summary>3D simulator compatibility</summary>
             ns-3 support depends on the mobility model. Changing-Z traces did not reproduce the intended route with the tested ns-3.47 Ns2MobilityHelper.
             Cooja Mobility does not read Z in the tested plugin; enabling it requires modifying and rebuilding the plugin to read and apply Z. This checkbox does not modify Cooja. Static CSC positions support Z.
             INET requires is3D=true for 3D traces. Experimental 3D use and validation of the chosen simulator configuration are the user's responsibility.
@@ -517,7 +540,7 @@
           </dl>
           <div id="propagationProfileSources" class="hint" style="margin-top:7px;"></div>
         </div>
-        <details>
+        <details id="propagationDetails">
           <summary>Cooja LogisticLoss parameters</summary>
           <div class="propagation-advanced-grid">
             <label for="propagationSuccessRatioInput">TX success ratio
@@ -1102,7 +1125,7 @@
     }
     // Undo/Redo
     const undoStack = []; const redoStack = [];
-    const snapshot = () => { syncActiveNodeGroup(); return JSON.parse(JSON.stringify({ positions, scenario, origin: scenarioModel.origin, nodeGroups, activeNodeGroupId, experimental3d: document.getElementById('experimental3d').checked })); };
+    const snapshot = () => { syncActiveNodeGroup(); return JSON.parse(JSON.stringify({ positions, scenario, origin: scenarioModel.origin, nodeGroups, activeNodeGroupId, experimental3d: document.getElementById('experimental3d').checked, ...(window.captureProjectExtras ? {projectExtras:window.captureProjectExtras()} : {}) })); };
     function commitHistory(state = snapshot()){ undoStack.push(JSON.parse(JSON.stringify(state))); if (undoStack.length>200) undoStack.shift(); redoStack.length=0; }
     function restore(state){
       clearTimeout(elevationAutoTimer);
@@ -1131,6 +1154,7 @@
       restoreGroupPolygons();
       draw();
       updateOutput();
+      if(state.projectExtras && window.restoreProjectExtras)window.restoreProjectExtras({...state.projectExtras,controls:{...state.projectExtras.controls,experimental3d:state.experimental3d}});
     }
 
     // === Session persistence (localStorage) ===
@@ -1272,6 +1296,9 @@
       }
       const group=nodeGroups.find(g=>g.id===activeNodeGroupId);
       document.getElementById('autoNodeIdsControl').hidden=group?.type!=='fixed';
+      const playbackPanel=document.getElementById('playbackPanel');
+      if(group?.type!=='mobile')playbackPanel.open=false;
+      playbackPanel.hidden=group?.type!=='mobile';
       document.getElementById('nodeGroupName').value=group?.name || '';
       scenarioMobileBtn.disabled=group?.type!=='mobile';scenarioFixedBtn.disabled=group?.type!=='fixed';
       scenarioMobileBtn.classList.toggle('active',group?.type==='mobile');scenarioFixedBtn.classList.toggle('active',group?.type==='fixed');
@@ -3187,5 +3214,6 @@
       });
     }
   </script>
+  <script src="project-workspace.js"></script>
 </body>
 </html>

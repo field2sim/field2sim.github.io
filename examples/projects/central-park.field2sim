@@ -1,0 +1,266 @@
+{
+  "format": "field2sim-project",
+  "version": 1,
+  "state": {
+    "positions": [
+      {
+        "nodeId": 7,
+        "time": 0,
+        "lat": 40.7806,
+        "lng": -73.9692,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 7,
+        "time": 45.873,
+        "lat": 40.7812,
+        "lng": -73.969,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 7,
+        "time": 116.267,
+        "lat": 40.7821,
+        "lng": -73.9686,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 7,
+        "time": 192.708,
+        "lat": 40.7828,
+        "lng": -73.9676,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 7,
+        "time": 287.931,
+        "lat": 40.7822,
+        "lng": -73.9661,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 7,
+        "time": 362.906,
+        "lat": 40.7812,
+        "lng": -73.9659,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 7,
+        "time": 443.624,
+        "lat": 40.7806,
+        "lng": -73.9671,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 7,
+        "time": 561.502,
+        "lat": 40.7806,
+        "lng": -73.9692,
+        "z": 0,
+        "timeGenerated": false
+      }
+    ],
+    "scenario": "mobile",
+    "origin": {
+      "mode": "first",
+      "lat": null,
+      "lng": null,
+      "alt": 0
+    },
+    "nodeGroups": [
+      {
+        "id": "park-sensors",
+        "name": "Park sensors",
+        "type": "fixed",
+        "points": [
+          {
+            "nodeId": 1,
+            "time": 0,
+            "lat": 40.781,
+            "lng": -73.9687,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 2,
+            "time": 0,
+            "lat": 40.7814,
+            "lng": -73.9678,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 3,
+            "time": 0,
+            "lat": 40.782,
+            "lng": -73.9682,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 4,
+            "time": 0,
+            "lat": 40.7824,
+            "lng": -73.9671,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 5,
+            "time": 0,
+            "lat": 40.7817,
+            "lng": -73.9664,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 6,
+            "time": 0,
+            "lat": 40.7809,
+            "lng": -73.9669,
+            "z": 0,
+            "timeGenerated": false
+          }
+        ],
+        "draft": "1 0 40.781 -73.9687\n2 0 40.7814 -73.9678\n3 0 40.782 -73.9682\n4 0 40.7824 -73.9671\n5 0 40.7817 -73.9664\n6 0 40.7809 -73.9669",
+        "interval": "1000",
+        "polygons": []
+      },
+      {
+        "id": "park-collector",
+        "name": "Mobile collector",
+        "type": "mobile",
+        "points": [
+          {
+            "nodeId": 7,
+            "time": 0,
+            "lat": 40.7806,
+            "lng": -73.9692,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 7,
+            "time": 45.873,
+            "lat": 40.7812,
+            "lng": -73.969,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 7,
+            "time": 116.267,
+            "lat": 40.7821,
+            "lng": -73.9686,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 7,
+            "time": 192.708,
+            "lat": 40.7828,
+            "lng": -73.9676,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 7,
+            "time": 287.931,
+            "lat": 40.7822,
+            "lng": -73.9661,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 7,
+            "time": 362.906,
+            "lat": 40.7812,
+            "lng": -73.9659,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 7,
+            "time": 443.624,
+            "lat": 40.7806,
+            "lng": -73.9671,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 7,
+            "time": 561.502,
+            "lat": 40.7806,
+            "lng": -73.9692,
+            "z": 0,
+            "timeGenerated": false
+          }
+        ],
+        "draft": "7 0 40.7806 -73.9692\n7 45.873 40.7812 -73.969\n7 116.267 40.7821 -73.9686\n7 192.708 40.7828 -73.9676\n7 287.931 40.7822 -73.9661\n7 362.906 40.7812 -73.9659\n7 443.624 40.7806 -73.9671\n7 561.502 40.7806 -73.9692",
+        "interval": "1000",
+        "polygons": []
+      }
+    ],
+    "activeNodeGroupId": "park-collector",
+    "experimental3d": false,
+    "projectExtras": {
+      "controls": {
+        "nodeIdInput": "7",
+        "intervalInput": "1000",
+        "originModeSelect": "first",
+        "originLatInput": "",
+        "originLngInput": "",
+        "originAltInput": "0",
+        "circleRadiusSelect": "50",
+        "circleRadiusCustomInput": "10",
+        "autoNodeIds": false,
+        "experimental3d": false,
+        "simExportSelect": "cooja",
+        "enablePathLossProfile": false,
+        "propagationEnvironmentSelect": "urban",
+        "propagationProfileSelect": "urban-los-site-general",
+        "propagationRangeInput": "50",
+        "propagationInterferenceRangeInput": "100",
+        "propagationSuccessRatioInput": "1",
+        "propagationRxSensitivityInput": "-100",
+        "propagationRssiInflectionInput": "-92",
+        "propagationPathLossExponentInput": "2.07",
+        "propagationShadowingInput": "3",
+        "propagationTimeVariationSelect": "false",
+        "propagationSeedInput": "123456",
+        "newNodeGroupType": "fixed",
+        "searchInput": "Central Park, New York",
+        "playbackSpeed": "20"
+      },
+      "mode": "maps",
+      "scanDirection": "horizontal",
+      "map": {
+        "lat": 40.7817,
+        "lng": -73.9675,
+        "zoom": 16,
+        "basemap": "street"
+      },
+      "groupsCollapsed": false,
+      "polygonDraft": [],
+      "elevations": [],
+      "csc": null,
+      "playback": {
+        "time": 0,
+        "expanded": false
+      },
+      "projectName": "central-park",
+      "details": {
+        "compatibility": false,
+        "propagation": false
+      }
+    }
+  }
+}
