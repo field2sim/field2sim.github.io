@@ -9,14 +9,15 @@
     'propagationRangeInput','propagationInterferenceRangeInput','propagationSuccessRatioInput',
     'propagationRxSensitivityInput','propagationRssiInflectionInput','propagationPathLossExponentInput',
     'propagationShadowingInput','propagationTimeVariationSelect','propagationSeedInput',
-    'newNodeGroupType','searchInput','playbackSpeed'
+    'newNodeGroupType','searchInput','playbackSpeed','playbackLoop'
   ];
+  const optionalDefaults={playbackLoop:false};
   const clone=x=>JSON.parse(JSON.stringify(x));
   const status=message=>{$('projectStatus').textContent=message;};
-  let projectName='scenario', replayTracks=[], markers=[], frame=null, clockTime=0, duration=0, previousFrame=null;
+  let projectName='scenario', replayTracks=[], markers=[], frame=null, clockTime=0, duration=0, previousFrame=null, trails=[];
   const replayLayer=L.layerGroup().addTo(map);
   function pause(){if(frame!==null)cancelAnimationFrame(frame);frame=null;previousFrame=null;$('playRouteBtn').textContent='▶ Play';}
-  function stop(){pause();clockTime=0;replayTracks=[];markers=[];replayLayer.clearLayers();$('playbackTime').value='0';$('playbackStatus').textContent='Press Play to preview mobile routes.';}
+  function stop(){pause();clockTime=0;replayTracks=[];markers=[];trails=[];replayLayer.clearLayers();$('playbackTime').value='0';$('playbackStatus').textContent='Press Play to preview mobile routes.';}
   function controls(){return Object.fromEntries(controlIds.map(id=>[id,$(id).type==='checkbox'?$(id).checked:$(id).value]));}
   window.captureProjectExtras=()=>{
     const center=map.getCenter(), relevant=new Set(nodeGroups.flatMap(g=>g.points).map(p=>Field2SimElevation.key(p)));
@@ -33,7 +34,7 @@
   };
   function validateExtras(e){
     for(const id of controlIds){
-      const value=e.controls[id], el=$(id);
+      const value=e.controls[id] ?? optionalDefaults[id], el=$(id);
       if(el.type==='checkbox'){if(typeof value!=='boolean')throw Error(`Missing checkbox: ${id}`);}
       else if(typeof value!=='string')throw Error(`Missing setting: ${id}`);
       else if(el.tagName==='SELECT'&&id!=='propagationProfileSelect'&&![...el.options].some(o=>o.value===value))throw Error(`Unknown setting: ${id}`);
@@ -49,7 +50,7 @@
     // Set dependent selectors first; do not dispatch change handlers that reset user radio values.
     propagationEnvironmentSelect.value=e.controls.propagationEnvironmentSelect;
     populateCitedProfiles(e.controls.propagationProfileSelect);
-    for(const id of controlIds){const el=$(id);if(el.type==='checkbox')el.checked=e.controls[id];else el.value=e.controls[id];}
+    for(const id of controlIds){const el=$(id);if(el.type==='checkbox')el.checked=e.controls[id] ?? optionalDefaults[id];else el.value=e.controls[id] ?? optionalDefaults[id];}
     elevationRecords=new Map(e.elevations.map(r=>[r.key,clone(r)]));
     // Preserve stored heights on open, including old/manual values. New geometry can trigger lookup.
     try{const groups=elevationGroups('all');elevationAutoSignature=JSON.stringify(groups.map(g=>[g.id,g.points.map(p=>[p.nodeId,p.time,p.lat,p.lng]) ]));}catch(_){elevationAutoSignature=null;}
@@ -118,10 +119,17 @@
     try{if(file.size>25*1024*1024)throw Error('Project exceeds the 25 MB import limit.');const project=core.decode(await file.text());applyProject(project);}
     catch(e){status(`Open failed: ${e.message}`);}finally{event.target.value='';}
   });
+  const examples={
+    'central-park':'Central Park: static sensors + mobile collector',
+    'great-wall-mutianyu':'Mutianyu Great Wall: monitoring sensors + inspection drone (2D route)',
+    'saint-emilion-vineyard':'Saint-Émilion vineyard: static sensors + mobile collector',
+    'giza-plateau':'Giza Plateau: monitoring sensors + mobile survey collector'
+  };
   $('projectExample').addEventListener('change',async event=>{
-    if(event.target.value!=='central-park')return;
-    try{const response=await fetch('examples/projects/central-park.field2sim');if(!response.ok)throw Error('Example could not be loaded.');applyProject(core.decode(await response.text()));status('Illustrative Central Park example: static sensors + mobile collector. Undo restores your previous project.');}
-    catch(e){status(e.message);}finally{event.target.value='';}
+    const id=event.target.value;if(!Object.hasOwn(examples,id))return;
+    event.target.disabled=true;
+    try{const response=await fetch(`examples/projects/${id}.field2sim`);if(!response.ok)throw Error('Example could not be loaded.');applyProject(core.decode(await response.text()));status(`Illustrative ${examples[id]}. Undo restores your previous project.`);}
+    catch(e){status(e.message);}finally{event.target.value='';event.target.disabled=false;}
   });
   function preparePlayback(){
     syncActiveNodeGroup();
@@ -130,19 +138,32 @@
     if(!replayTracks.length)throw Error('Add a mobile group with timestamped waypoints first.');
     duration=Math.max(...replayTracks.map(t=>t.points[t.points.length-1].time));
     $('playbackTime').max=String(duration||1);clockTime=Math.min(clockTime,duration);
-    replayLayer.clearLayers();markers=replayTracks.map((track,i)=>{
+    replayLayer.clearLayers();trails=[];markers=replayTracks.map((track,i)=>{
       const colors=['#dc2626','#0891b2','#7c3aed','#d97706'];
+      L.polyline(track.points.map(p=>[p.lat,p.lng]),{color:colors[i%colors.length],weight:5,opacity:.18,interactive:false}).addTo(replayLayer);
+      trails.push(L.polyline([],{color:colors[i%colors.length],weight:5,opacity:.9,interactive:false}).addTo(replayLayer));
       const marker=L.circleMarker([0,0],{radius:9,color:'#fff',weight:2,fillColor:colors[i%colors.length],fillOpacity:1,interactive:false,pane:'tooltipPane'});
-      const label=document.createElement('span');label.textContent=`${track.name} · node ${track.points[0].nodeId}`;marker.bindTooltip(label,{permanent:true,direction:'top'});return marker;
+      const label=document.createElement('div');label.className='playback-tag';marker.bindTooltip(label,{permanent:true,direction:'right',offset:[12,-25]});return marker;
     });
   }
   function renderPlayback(){
-    replayTracks.forEach((track,i)=>{const p=core.atTime(track.points,clockTime),marker=markers[i];if(p){marker.setLatLng([p.lat,p.lng]);if(!replayLayer.hasLayer(marker))replayLayer.addLayer(marker);}else replayLayer.removeLayer(marker);});
+    replayTracks.forEach((track,i)=>{
+      const p=core.atTime(track.points,clockTime),marker=markers[i],index=core.segmentIndex(track.points,clockTime);
+      if(p){
+        const a=track.points[index],b=track.points[index+1];
+        const speed=b?core.distance(a,b,$('experimental3d').checked)/(b.time-a.time):0;
+        marker.getTooltip().getContent().textContent=`${track.name} · ID ${track.points[0].nodeId}\nt=${clockTime.toFixed(1)} s · ${speed.toFixed(2)} m/s · WP ${index+1}/${track.points.length}\n${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}${$('experimental3d').checked?' · altitude '+p.z.toFixed(1)+' m':''}`;
+        marker.setLatLng([p.lat,p.lng]);if(!replayLayer.hasLayer(marker))replayLayer.addLayer(marker);
+        trails[i].setLatLngs([...track.points.slice(0,index+1).map(p=>[p.lat,p.lng]),[p.lat,p.lng]]);
+      }else{replayLayer.removeLayer(marker);trails[i].setLatLngs([]);}
+    });
     $('playbackTime').value=String(clockTime);
     $('playbackStatus').textContent=`${clockTime.toFixed(1)} / ${duration.toFixed(1)} s · ${replayTracks.length} mobile group(s) · linear waypoint preview`;
   }
   function tick(now){
-    if(previousFrame!==null)clockTime=Math.min(duration,clockTime+(now-previousFrame)/1000*Number($('playbackSpeed').value));previousFrame=now;
+    if(previousFrame!==null)clockTime=clockTime+(now-previousFrame)/1000*Number($('playbackSpeed').value);previousFrame=now;
+    if($('playbackLoop').checked && duration>0 && clockTime>=duration)clockTime%=duration;
+    else clockTime=Math.min(clockTime,duration);
     renderPlayback();if(clockTime>=duration){pause();return;}frame=requestAnimationFrame(tick);
   }
   $('playRouteBtn').addEventListener('click',()=>{
@@ -152,6 +173,17 @@
   });
   $('stopRouteBtn').addEventListener('click',stop);
   $('playbackTime').addEventListener('input',()=>{pause();const t=Number($('playbackTime').value);try{preparePlayback();clockTime=Math.min(t,duration);renderPlayback();}catch(e){$('playbackStatus').textContent=e.message;}});
+  function jumpWaypoint(direction){
+    pause();try{
+      preparePlayback();const track=replayTracks.find(t=>t.id===activeNodeGroupId);
+      if(!track)throw Error('Select a mobile group to step through its waypoints.');
+      const times=track.points.map(p=>p.time);
+      clockTime=direction>0?(times.find(t=>t>clockTime+1e-7)??times[times.length-1]):([...times].reverse().find(t=>t<clockTime-1e-7)??times[0]);
+      renderPlayback();
+    }catch(e){$('playbackStatus').textContent=e.message;}
+  }
+  $('previousWaypointBtn').addEventListener('click',()=>jumpWaypoint(-1));
+  $('nextWaypointBtn').addEventListener('click',()=>jumpWaypoint(1));
   // Editing stops a stale preview; background navigation does not change scenario time.
   $('sidebar').addEventListener('input',event=>{if(!event.target.closest('#playbackPanel'))stop();});
   $('nodeGroupsPanel').addEventListener('click',stop);

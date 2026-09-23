@@ -1,0 +1,363 @@
+{
+  "format": "field2sim-project",
+  "version": 1,
+  "state": {
+    "positions": [
+      {
+        "nodeId": 1,
+        "time": 0,
+        "lat": 29.9808,
+        "lng": 31.1327,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 99.527,
+        "lat": 29.9808,
+        "lng": 31.1358,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 149.393,
+        "lat": 29.9795,
+        "lng": 31.1362,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 205.36,
+        "lat": 29.978,
+        "lng": 31.136,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 269.328,
+        "lat": 29.9771,
+        "lng": 31.1343,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 345.724,
+        "lat": 29.9755,
+        "lng": 31.1328,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 454.415,
+        "lat": 29.9732,
+        "lng": 31.1307,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 569.329,
+        "lat": 29.972,
+        "lng": 31.1274,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 645.726,
+        "lat": 29.9736,
+        "lng": 31.1259,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 735.202,
+        "lat": 29.976,
+        "lng": 31.1262,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 831.205,
+        "lat": 29.978,
+        "lng": 31.1281,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 934.182,
+        "lat": 29.9801,
+        "lng": 31.1302,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 1018.535,
+        "lat": 29.9808,
+        "lng": 31.1327,
+        "z": 0,
+        "timeGenerated": false
+      }
+    ],
+    "scenario": "mobile",
+    "origin": {
+      "mode": "first",
+      "lat": null,
+      "lng": null,
+      "alt": 0
+    },
+    "nodeGroups": [
+      {
+        "id": "giza-plateau-sensors",
+        "name": "Heritage monitoring sensors",
+        "type": "fixed",
+        "points": [
+          {
+            "nodeId": 2,
+            "time": 0,
+            "lat": 29.9805,
+            "lng": 31.1341,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 3,
+            "time": 0,
+            "lat": 29.979,
+            "lng": 31.1358,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 4,
+            "time": 0,
+            "lat": 29.9775,
+            "lng": 31.1348,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 5,
+            "time": 0,
+            "lat": 29.9759,
+            "lng": 31.1325,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 6,
+            "time": 0,
+            "lat": 29.9735,
+            "lng": 31.1305,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 7,
+            "time": 0,
+            "lat": 29.9724,
+            "lng": 31.1275,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 8,
+            "time": 0,
+            "lat": 29.976,
+            "lng": 31.1266,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 9,
+            "time": 0,
+            "lat": 29.9782,
+            "lng": 31.1286,
+            "z": 0,
+            "timeGenerated": false
+          }
+        ],
+        "draft": "2 0 29.9805 31.1341\n3 0 29.979 31.1358\n4 0 29.9775 31.1348\n5 0 29.9759 31.1325\n6 0 29.9735 31.1305\n7 0 29.9724 31.1275\n8 0 29.976 31.1266\n9 0 29.9782 31.1286",
+        "interval": "1000",
+        "polygons": []
+      },
+      {
+        "id": "giza-plateau-mobile",
+        "name": "Mobile survey collector",
+        "type": "mobile",
+        "points": [
+          {
+            "nodeId": 1,
+            "time": 0,
+            "lat": 29.9808,
+            "lng": 31.1327,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 99.527,
+            "lat": 29.9808,
+            "lng": 31.1358,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 149.393,
+            "lat": 29.9795,
+            "lng": 31.1362,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 205.36,
+            "lat": 29.978,
+            "lng": 31.136,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 269.328,
+            "lat": 29.9771,
+            "lng": 31.1343,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 345.724,
+            "lat": 29.9755,
+            "lng": 31.1328,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 454.415,
+            "lat": 29.9732,
+            "lng": 31.1307,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 569.329,
+            "lat": 29.972,
+            "lng": 31.1274,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 645.726,
+            "lat": 29.9736,
+            "lng": 31.1259,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 735.202,
+            "lat": 29.976,
+            "lng": 31.1262,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 831.205,
+            "lat": 29.978,
+            "lng": 31.1281,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 934.182,
+            "lat": 29.9801,
+            "lng": 31.1302,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 1018.535,
+            "lat": 29.9808,
+            "lng": 31.1327,
+            "z": 0,
+            "timeGenerated": false
+          }
+        ],
+        "draft": "1 0 29.9808 31.1327\n1 99.527 29.9808 31.1358\n1 149.393 29.9795 31.1362\n1 205.36 29.978 31.136\n1 269.328 29.9771 31.1343\n1 345.724 29.9755 31.1328\n1 454.415 29.9732 31.1307\n1 569.329 29.972 31.1274\n1 645.726 29.9736 31.1259\n1 735.202 29.976 31.1262\n1 831.205 29.978 31.1281\n1 934.182 29.9801 31.1302\n1 1018.535 29.9808 31.1327",
+        "interval": "1000",
+        "polygons": []
+      }
+    ],
+    "activeNodeGroupId": "giza-plateau-mobile",
+    "experimental3d": false,
+    "projectExtras": {
+      "controls": {
+        "nodeIdInput": "1",
+        "intervalInput": "1000",
+        "originModeSelect": "first",
+        "originLatInput": "",
+        "originLngInput": "",
+        "originAltInput": "0",
+        "circleRadiusSelect": "50",
+        "circleRadiusCustomInput": "10",
+        "autoNodeIds": false,
+        "experimental3d": false,
+        "simExportSelect": "cooja",
+        "enablePathLossProfile": false,
+        "propagationEnvironmentSelect": "urban",
+        "propagationProfileSelect": "urban-los-site-general",
+        "propagationRangeInput": "50",
+        "propagationInterferenceRangeInput": "100",
+        "propagationSuccessRatioInput": "1",
+        "propagationRxSensitivityInput": "-100",
+        "propagationRssiInflectionInput": "-92",
+        "propagationPathLossExponentInput": "2.07",
+        "propagationShadowingInput": "3",
+        "propagationTimeVariationSelect": "false",
+        "propagationSeedInput": "123456",
+        "newNodeGroupType": "fixed",
+        "searchInput": "Giza Plateau, Egypt",
+        "playbackSpeed": "20",
+        "playbackLoop": false
+      },
+      "mode": "maps",
+      "scanDirection": "horizontal",
+      "map": {
+        "lat": 29.976399999999998,
+        "lng": 31.131050000000002,
+        "zoom": 16,
+        "basemap": "street"
+      },
+      "groupsCollapsed": false,
+      "polygonDraft": [],
+      "elevations": [],
+      "csc": null,
+      "playback": {
+        "time": 0,
+        "expanded": false
+      },
+      "projectName": "giza-plateau",
+      "details": {
+        "compatibility": false,
+        "propagation": false
+      }
+    }
+  }
+}

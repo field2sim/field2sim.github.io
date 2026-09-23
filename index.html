@@ -38,6 +38,7 @@
     canvas#grid { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
 
     #sidebar { width: 420px; flex-shrink: 0; padding: 10px; background: #fff; border-left: 1px solid #ccc; display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow-y: scroll; height: 100vh; }
+    .playback-tag { font-size:11px; line-height:1.4; white-space:pre; }
     .brand-row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
     #projectMenu { position:relative; }
     #projectMenu > summary { cursor:pointer; font-size:13px; padding:5px 9px; border:1px solid #cbd5e1; border-radius:5px; background:#f8fafc; color:#0b1f33; }
@@ -317,6 +318,10 @@
         <div class="shortcut-section full-width">
           <div class="section-title">Navigation</div>
           <div class="shortcut-item">
+            <span class="shortcut-description">Pan temporarily (Point Mode): hold Space and drag</span>
+            <div class="shortcut-keys"><span class="key">Space</span></div>
+          </div>
+          <div class="shortcut-item">
             <span class="shortcut-description">Zoom In/Out (Map Mode)</span>
             <div class="shortcut-keys">
               <span class="key">Ctrl</span>
@@ -363,7 +368,7 @@
         <div style="display:flex;gap:6px"><button id="openProjectBtn" style="flex:1">Open Project</button><button id="saveProjectBtn" style="flex:1">Save Project</button></div>
         <input id="projectFileInput" type="file" accept=".field2sim" hidden>
         <label for="projectExample" style="display:block;margin-top:6px">Examples</label>
-        <select id="projectExample" style="width:100%"><option value="">Choose an example…</option><option value="central-park">Central Park · sensors + mobile collector</option></select>
+        <select id="projectExample" style="width:100%"><option value="">Choose an example…</option><option value="central-park">Central Park · sensors + mobile collector</option><option value="great-wall-mutianyu">Great Wall · inspection drone</option><option value="saint-emilion-vineyard">Saint-Émilion · vineyard sensors + collector</option><option value="giza-plateau">Giza Pyramids · sensors + survey collector</option></select>
         <div id="projectStatus" role="status" class="hint"></div>
           </section>
           </details>
@@ -390,6 +395,7 @@
         <summary>Route playback · prototype</summary>
         <div class="hint">All mobile groups · visual preview, not a network simulation. Times are seconds; shorter routes hold their final position.</div>
         <div style="display:flex;gap:6px;margin:6px 0"><button id="playRouteBtn">▶ Play</button><button id="stopRouteBtn">■ Stop</button><select id="playbackSpeed" aria-label="Playback speed"><option value="1">1×</option><option value="5">5×</option><option value="20" selected>20×</option><option value="60">60×</option></select></div>
+        <div style="display:flex;gap:6px;align-items:center;margin:6px 0"><button id="previousWaypointBtn" title="Previous waypoint in selected mobile group">◀ Waypoint</button><button id="nextWaypointBtn" title="Next waypoint in selected mobile group">Waypoint ▶</button><label><input id="playbackLoop" type="checkbox"> Loop</label></div>
         <input id="playbackTime" type="range" min="0" max="1" step="0.1" value="0" aria-label="Route time" style="width:100%">
         <div id="playbackStatus" role="status" class="hint">Press Play to preview mobile routes.</div>
       </details>
@@ -475,6 +481,7 @@
           </details>
         </div>
         <textarea id="latlngInput" wrap="off" placeholder="&lt;node_id&gt; &lt;time&gt; &lt;latitude&gt; &lt;longitude&gt; [altitude_m]&#10;Example:&#10;1 0.0 41.2867 36.33&#10;1 1.0 41.2870 36.331" style="box-sizing: border-box; width: 100%; height: 150px; font-family: monospace; font-size: 12px; padding: 5px; border: 1px solid #ccc; resize: vertical;"></textarea>
+        <div id="averageSpeed" class="hint" hidden style="margin-top:6px" title="Total route distance divided by elapsed time, including pauses. Times are in seconds."></div>
         <div class="hint" style="margin-top:6px">
           <span id="elevationStatus" role="status" aria-live="polite"></span>
           <div>Elevation: OpenTopoData / Mapzen · <a href="https://iotlab.omu.edu.tr/elevation/license" target="_blank" rel="noopener" title="Coordinates are sent to OpenTopoData and cached by IoTlab for up to 30 days.">Sources and licenses</a></div>
@@ -980,8 +987,19 @@
       }).join('\n');
     }
 
+    function updateAverageSpeed() {
+      const label=document.getElementById('averageSpeed');
+      label.hidden=scenario!=='mobile'||!latlngInput.value.trim();
+      if(label.hidden){label.textContent='';return;}
+      try {
+        const points=Field2SimNodeGroups.parseRows(latlngInput.value,'mobile');
+        const speed=Field2SimProject.averageSpeed(points,document.getElementById('experimental3d').checked);
+        label.textContent=speed===null?'Average Speed: —':`Average Speed: ${speed.toFixed(2)} m/s (${(speed * 3.6).toFixed(2)} km/h)`;
+      } catch (_) {label.textContent='Average Speed: —';}
+    }
     function refreshLatLngInput() {
       latlngInput.value = positions.length ? formatWaypointRows() : '';
+      updateAverageSpeed();
     }
 
     function readCustomOrigin() {
@@ -1572,8 +1590,47 @@
       updateScenario('fixed');
     });
 
+    // Space temporarily enables panning without changing the authoring mode.
+    let spacePan = false;
+    let spacePanHeld = false;
+    let spacePanDragging = false;
+    function endSpacePan() {
+      spacePanHeld = false;
+      spacePanDragging = false;
+      if (!spacePan) return;
+      spacePan = false;
+      map.getContainer().style.cursor = '';
+      updateWorkMode(mode);
+    }
+    window.addEventListener('keydown', e => {
+      if (e.code !== 'Space' || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (spacePan) { e.preventDefault(); spacePanHeld = true; return; }
+      if (mode !== 'point' || draggingNodeIndex >= 0 || isSelectingRect) return;
+      if (e.target.closest?.('input, textarea, select, button, a, summary, [contenteditable], [role="button"]') || !allowMapSelectionShortcuts(e)) return;
+      if (document.getElementById('shortcutsOverlay').classList.contains('show')) return;
+      e.preventDefault();
+      spacePan = spacePanHeld = true;
+      map.dragging.enable();
+      map.getContainer().style.cursor = 'grab';
+    });
+    window.addEventListener('keyup', e => {
+      if (e.code !== 'Space' || !spacePan) return;
+      e.preventDefault();
+      spacePanHeld = false;
+      if (!spacePanDragging) endSpacePan();
+    });
+    window.addEventListener('mouseup', () => {
+      if (!spacePan) return;
+      spacePanDragging = false;
+      if (!spacePanHeld) endSpacePan();
+      else map.getContainer().style.cursor = 'grab';
+    });
+    window.addEventListener('blur', endSpacePan);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) endSpacePan(); });
+
     // === Mode Selection ===
     function updateWorkMode(value) {
+      spacePan = spacePanHeld = spacePanDragging = false;
       mode = value;
       workModeMapsBtn.classList.toggle('active', value === 'maps');
       workModePointBtn.classList.toggle('active', value === 'point');
@@ -1623,6 +1680,7 @@
 
     // === Map-mode interactions ===
     map.on('mousemove', (e)=>{ 
+      if (spacePan) { map.getContainer().style.cursor = spacePanDragging ? 'grabbing' : 'grab'; return; }
       const hoverPoint = map.latLngToContainerPoint(e.latlng);
       map.getContainer().style.cursor = draggingNodeIndex >= 0 ? 'grabbing' : hitTestNodeMap(hoverPoint.x, hoverPoint.y) >= 0 ? 'pointer' : '';
       if (mode === 'point') {
@@ -1658,6 +1716,7 @@
     map.on('mouseout', () => { map.getContainer().style.cursor = ''; });
 
     map.on('mousedown', (e)=>{ 
+      if (spacePan) { spacePanDragging = true; map.getContainer().style.cursor = 'grabbing'; return; }
       if (e.originalEvent.button !== undefined && e.originalEvent.button !== 0) return;
       const hitPoint = map.latLngToContainerPoint(e.latlng);
       const hitNode = hitTestNodeMap(hitPoint.x, hitPoint.y);
@@ -1787,6 +1846,7 @@
     }
 
     map.on('mouseup', (e)=>{ 
+      if (spacePan) return;
       if (mode === 'point') {
         if (draggingNodeIndex >= 0) {
           // Finish dragging
@@ -2232,6 +2292,7 @@
     function calcMetersPerPixel(lat, zoom){ const earthCircumference = 40075016.686; return Math.cos(lat*Math.PI/180) * earthCircumference / Math.pow(2, zoom+8); }
 
     function draw(){
+      updateAverageSpeed();
       const rect = stage.getBoundingClientRect();
       if (canvas.width !== rect.width || canvas.height !== rect.height) {
         canvas.width = rect.width;
@@ -2964,6 +3025,7 @@
         }
       }
       inputBeforeEdit=null;
+      updateAverageSpeed();
       const text = e.target.value.trim();
       clearOutputPreview();
       

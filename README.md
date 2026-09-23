@@ -29,7 +29,7 @@ Open **http://127.0.0.1:8766/** in a modern browser. Keep the terminal open; pre
 
 ## Portable projects and route preview
 
-Use **Save Project / Open Project** to carry the entire workspace in a `.field2sim` file, including all node groups, 2D/3D and origin settings, propagation controls, stored elevations and an optional CSC copy. Provider keys and local file permissions are excluded. **Examples** includes a two-group Central Park scenario. **Route playback · prototype** provides a shared timeline with play/pause, scrubbing and playback-speed controls; it does not change exported timestamps or simulate network behavior. See [project examples and file contents](examples/projects/README.md).
+Use **Save Project / Open Project** to carry the entire workspace in a `.field2sim` file, including all node groups, 2D/3D and origin settings, propagation controls, stored elevations and an optional CSC copy. Provider keys and local file permissions are excluded. **Examples** includes two-group scenarios at Central Park, the Mutianyu Great Wall, a Saint-Émilion vineyard, and the Giza Plateau. **Route playback · prototype** provides a shared timeline with play/pause, node information tags, completed trails, waypoint stepping, looping, scrubbing and playback-speed controls; it does not change exported timestamps or simulate network behavior. **Average Speed** below mobile coordinate input shows total route distance divided by elapsed time, including pauses. See [project examples and file contents](examples/projects/README.md).
 
 ## Current features
 

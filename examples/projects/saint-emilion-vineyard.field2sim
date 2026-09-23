@@ -1,0 +1,347 @@
+{
+  "format": "field2sim-project",
+  "version": 1,
+  "state": {
+    "positions": [
+      {
+        "nodeId": 1,
+        "time": 0,
+        "lat": 44.91205,
+        "lng": -0.19455,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 139.12,
+        "lat": 44.91205,
+        "lng": -0.1919,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 172.479,
+        "lat": 44.9116,
+        "lng": -0.1919,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 311.6,
+        "lat": 44.9116,
+        "lng": -0.19455,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 344.958,
+        "lat": 44.91115,
+        "lng": -0.19455,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 484.081,
+        "lat": 44.91115,
+        "lng": -0.1919,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 511.332,
+        "lat": 44.91085,
+        "lng": -0.1916,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 615.114,
+        "lat": 44.91225,
+        "lng": -0.1916,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 769.983,
+        "lat": 44.91225,
+        "lng": -0.19455,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 784.809,
+        "lat": 44.91205,
+        "lng": -0.19455,
+        "z": 0,
+        "timeGenerated": false
+      }
+    ],
+    "scenario": "mobile",
+    "origin": {
+      "mode": "first",
+      "lat": null,
+      "lng": null,
+      "alt": 0
+    },
+    "nodeGroups": [
+      {
+        "id": "saint-emilion-vineyard-sensors",
+        "name": "Vineyard sensors",
+        "type": "fixed",
+        "points": [
+          {
+            "nodeId": 2,
+            "time": 0,
+            "lat": 44.9119,
+            "lng": -0.1942,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 3,
+            "time": 0,
+            "lat": 44.9119,
+            "lng": -0.19355,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 4,
+            "time": 0,
+            "lat": 44.9119,
+            "lng": -0.1929,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 5,
+            "time": 0,
+            "lat": 44.9119,
+            "lng": -0.19225,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 6,
+            "time": 0,
+            "lat": 44.91145,
+            "lng": -0.1942,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 7,
+            "time": 0,
+            "lat": 44.91145,
+            "lng": -0.19355,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 8,
+            "time": 0,
+            "lat": 44.91145,
+            "lng": -0.1929,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 9,
+            "time": 0,
+            "lat": 44.91145,
+            "lng": -0.19225,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 10,
+            "time": 0,
+            "lat": 44.911,
+            "lng": -0.1942,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 11,
+            "time": 0,
+            "lat": 44.911,
+            "lng": -0.19355,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 12,
+            "time": 0,
+            "lat": 44.911,
+            "lng": -0.1929,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 13,
+            "time": 0,
+            "lat": 44.911,
+            "lng": -0.19225,
+            "z": 0,
+            "timeGenerated": false
+          }
+        ],
+        "draft": "2 0 44.9119 -0.1942\n3 0 44.9119 -0.19355\n4 0 44.9119 -0.1929\n5 0 44.9119 -0.19225\n6 0 44.91145 -0.1942\n7 0 44.91145 -0.19355\n8 0 44.91145 -0.1929\n9 0 44.91145 -0.19225\n10 0 44.911 -0.1942\n11 0 44.911 -0.19355\n12 0 44.911 -0.1929\n13 0 44.911 -0.19225",
+        "interval": "1000",
+        "polygons": []
+      },
+      {
+        "id": "saint-emilion-vineyard-mobile",
+        "name": "Mobile data collector",
+        "type": "mobile",
+        "points": [
+          {
+            "nodeId": 1,
+            "time": 0,
+            "lat": 44.91205,
+            "lng": -0.19455,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 139.12,
+            "lat": 44.91205,
+            "lng": -0.1919,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 172.479,
+            "lat": 44.9116,
+            "lng": -0.1919,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 311.6,
+            "lat": 44.9116,
+            "lng": -0.19455,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 344.958,
+            "lat": 44.91115,
+            "lng": -0.19455,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 484.081,
+            "lat": 44.91115,
+            "lng": -0.1919,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 511.332,
+            "lat": 44.91085,
+            "lng": -0.1916,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 615.114,
+            "lat": 44.91225,
+            "lng": -0.1916,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 769.983,
+            "lat": 44.91225,
+            "lng": -0.19455,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 784.809,
+            "lat": 44.91205,
+            "lng": -0.19455,
+            "z": 0,
+            "timeGenerated": false
+          }
+        ],
+        "draft": "1 0 44.91205 -0.19455\n1 139.12 44.91205 -0.1919\n1 172.479 44.9116 -0.1919\n1 311.6 44.9116 -0.19455\n1 344.958 44.91115 -0.19455\n1 484.081 44.91115 -0.1919\n1 511.332 44.91085 -0.1916\n1 615.114 44.91225 -0.1916\n1 769.983 44.91225 -0.19455\n1 784.809 44.91205 -0.19455",
+        "interval": "1000",
+        "polygons": []
+      }
+    ],
+    "activeNodeGroupId": "saint-emilion-vineyard-mobile",
+    "experimental3d": false,
+    "projectExtras": {
+      "controls": {
+        "nodeIdInput": "1",
+        "intervalInput": "1000",
+        "originModeSelect": "first",
+        "originLatInput": "",
+        "originLngInput": "",
+        "originAltInput": "0",
+        "circleRadiusSelect": "50",
+        "circleRadiusCustomInput": "10",
+        "autoNodeIds": false,
+        "experimental3d": false,
+        "simExportSelect": "cooja",
+        "enablePathLossProfile": false,
+        "propagationEnvironmentSelect": "urban",
+        "propagationProfileSelect": "urban-los-site-general",
+        "propagationRangeInput": "50",
+        "propagationInterferenceRangeInput": "100",
+        "propagationSuccessRatioInput": "1",
+        "propagationRxSensitivityInput": "-100",
+        "propagationRssiInflectionInput": "-92",
+        "propagationPathLossExponentInput": "2.07",
+        "propagationShadowingInput": "3",
+        "propagationTimeVariationSelect": "false",
+        "propagationSeedInput": "123456",
+        "newNodeGroupType": "fixed",
+        "searchInput": "Ch\u00e2teau-Figeac, Saint-\u00c9milion, France",
+        "playbackSpeed": "20",
+        "playbackLoop": false
+      },
+      "mode": "maps",
+      "scanDirection": "horizontal",
+      "map": {
+        "lat": 44.911550000000005,
+        "lng": -0.193075,
+        "zoom": 17,
+        "basemap": "street"
+      },
+      "groupsCollapsed": false,
+      "polygonDraft": [],
+      "elevations": [],
+      "csc": null,
+      "playback": {
+        "time": 0,
+        "expanded": false
+      },
+      "projectName": "saint-emilion-vineyard",
+      "details": {
+        "compatibility": false,
+        "propagation": false
+      }
+    }
+  }
+}

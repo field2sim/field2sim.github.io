@@ -1,0 +1,699 @@
+{
+  "format": "field2sim-project",
+  "version": 1,
+  "state": {
+    "positions": [
+      {
+        "nodeId": 1,
+        "time": 0,
+        "lat": 40.443252423,
+        "lng": 116.557020843,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 1,
+        "lat": 40.44282375,
+        "lng": 116.557171047,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 2,
+        "lat": 40.442384868,
+        "lng": 116.557315886,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 3,
+        "lat": 40.442015388,
+        "lng": 116.55764848,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 4,
+        "lat": 40.441658155,
+        "lng": 116.558005214,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 5,
+        "lat": 40.441221306,
+        "lng": 116.558168828,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 6,
+        "lat": 40.441027377,
+        "lng": 116.55870527,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 7,
+        "lat": 40.440755876,
+        "lng": 116.559182703,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 8,
+        "lat": 40.440431298,
+        "lng": 116.559558213,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 9,
+        "lat": 40.440549698,
+        "lng": 116.560105383,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 10,
+        "lat": 40.440176125,
+        "lng": 116.560408473,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 11,
+        "lat": 40.439761723,
+        "lng": 116.560641825,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 12,
+        "lat": 40.439355483,
+        "lng": 116.560869813,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 13,
+        "lat": 40.438936993,
+        "lng": 116.561076343,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 14,
+        "lat": 40.438542997,
+        "lng": 116.5613392,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 15,
+        "lat": 40.438102046,
+        "lng": 116.561331153,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 16,
+        "lat": 40.437663133,
+        "lng": 116.561309695,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 17,
+        "lat": 40.437285461,
+        "lng": 116.561594009,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 18,
+        "lat": 40.436911871,
+        "lng": 116.561926603,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 19,
+        "lat": 40.436474991,
+        "lng": 116.562036574,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 20,
+        "lat": 40.436029943,
+        "lng": 116.562036574,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 21,
+        "lat": 40.435593059,
+        "lng": 116.561907828,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 22,
+        "lat": 40.435207209,
+        "lng": 116.562205553,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 23,
+        "lat": 40.434921394,
+        "lng": 116.562640071,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 24,
+        "lat": 40.434651909,
+        "lng": 116.563096046,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 25,
+        "lat": 40.434335468,
+        "lng": 116.563498378,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 26,
+        "lat": 40.433945528,
+        "lng": 116.56370759,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 27,
+        "lat": 40.433561711,
+        "lng": 116.563943624,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 28,
+        "lat": 40.4331636,
+        "lng": 116.564174294,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 29,
+        "lat": 40.432751196,
+        "lng": 116.56393826,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 30,
+        "lat": 40.432320415,
+        "lng": 116.56393826,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 31,
+        "lat": 40.431961088,
+        "lng": 116.564254761,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 32,
+        "lat": 40.43156501,
+        "lng": 116.564517617,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 33,
+        "lat": 40.431128096,
+        "lng": 116.564512253,
+        "z": 0,
+        "timeGenerated": false
+      },
+      {
+        "nodeId": 1,
+        "time": 34,
+        "lat": 40.43076468,
+        "lng": 116.564828753,
+        "z": 0,
+        "timeGenerated": false
+      }
+    ],
+    "scenario": "mobile",
+    "origin": {
+      "mode": "first",
+      "lat": null,
+      "lng": null,
+      "alt": 0
+    },
+    "nodeGroups": [
+      {
+        "id": "great-wall-mutianyu-sensors",
+        "name": "Wall monitoring sensors",
+        "type": "fixed",
+        "points": [
+          {
+            "nodeId": 2,
+            "time": 0,
+            "lat": 40.4315,
+            "lng": 116.5662,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 3,
+            "time": 0,
+            "lat": 40.4333,
+            "lng": 116.565,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 4,
+            "time": 0,
+            "lat": 40.4351,
+            "lng": 116.5621,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 5,
+            "time": 0,
+            "lat": 40.4364,
+            "lng": 116.5598,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 6,
+            "time": 0,
+            "lat": 40.4376,
+            "lng": 116.5556,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 7,
+            "time": 0,
+            "lat": 40.4392,
+            "lng": 116.5522,
+            "z": 0,
+            "timeGenerated": false
+          }
+        ],
+        "draft": "2 0 40.4315 116.5662\n3 0 40.4333 116.565\n4 0 40.4351 116.5621\n5 0 40.4364 116.5598\n6 0 40.4376 116.5556\n7 0 40.4392 116.5522",
+        "interval": "1000",
+        "polygons": []
+      },
+      {
+        "id": "great-wall-mutianyu-mobile",
+        "name": "Inspection drone",
+        "type": "mobile",
+        "points": [
+          {
+            "nodeId": 1,
+            "time": 0,
+            "lat": 40.443252423,
+            "lng": 116.557020843,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 1,
+            "lat": 40.44282375,
+            "lng": 116.557171047,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 2,
+            "lat": 40.442384868,
+            "lng": 116.557315886,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 3,
+            "lat": 40.442015388,
+            "lng": 116.55764848,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 4,
+            "lat": 40.441658155,
+            "lng": 116.558005214,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 5,
+            "lat": 40.441221306,
+            "lng": 116.558168828,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 6,
+            "lat": 40.441027377,
+            "lng": 116.55870527,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 7,
+            "lat": 40.440755876,
+            "lng": 116.559182703,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 8,
+            "lat": 40.440431298,
+            "lng": 116.559558213,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 9,
+            "lat": 40.440549698,
+            "lng": 116.560105383,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 10,
+            "lat": 40.440176125,
+            "lng": 116.560408473,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 11,
+            "lat": 40.439761723,
+            "lng": 116.560641825,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 12,
+            "lat": 40.439355483,
+            "lng": 116.560869813,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 13,
+            "lat": 40.438936993,
+            "lng": 116.561076343,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 14,
+            "lat": 40.438542997,
+            "lng": 116.5613392,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 15,
+            "lat": 40.438102046,
+            "lng": 116.561331153,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 16,
+            "lat": 40.437663133,
+            "lng": 116.561309695,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 17,
+            "lat": 40.437285461,
+            "lng": 116.561594009,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 18,
+            "lat": 40.436911871,
+            "lng": 116.561926603,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 19,
+            "lat": 40.436474991,
+            "lng": 116.562036574,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 20,
+            "lat": 40.436029943,
+            "lng": 116.562036574,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 21,
+            "lat": 40.435593059,
+            "lng": 116.561907828,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 22,
+            "lat": 40.435207209,
+            "lng": 116.562205553,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 23,
+            "lat": 40.434921394,
+            "lng": 116.562640071,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 24,
+            "lat": 40.434651909,
+            "lng": 116.563096046,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 25,
+            "lat": 40.434335468,
+            "lng": 116.563498378,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 26,
+            "lat": 40.433945528,
+            "lng": 116.56370759,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 27,
+            "lat": 40.433561711,
+            "lng": 116.563943624,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 28,
+            "lat": 40.4331636,
+            "lng": 116.564174294,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 29,
+            "lat": 40.432751196,
+            "lng": 116.56393826,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 30,
+            "lat": 40.432320415,
+            "lng": 116.56393826,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 31,
+            "lat": 40.431961088,
+            "lng": 116.564254761,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 32,
+            "lat": 40.43156501,
+            "lng": 116.564517617,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 33,
+            "lat": 40.431128096,
+            "lng": 116.564512253,
+            "z": 0,
+            "timeGenerated": false
+          },
+          {
+            "nodeId": 1,
+            "time": 34,
+            "lat": 40.43076468,
+            "lng": 116.564828753,
+            "z": 0,
+            "timeGenerated": false
+          }
+        ],
+        "draft": "1 0.000000000 40.443252423 116.557020843\n1 1.000000000 40.442823750 116.557171047\n1 2.000000000 40.442384868 116.557315886\n1 3.000000000 40.442015388 116.557648480\n1 4.000000000 40.441658155 116.558005214\n1 5.000000000 40.441221306 116.558168828\n1 6.000000000 40.441027377 116.558705270\n1 7.000000000 40.440755876 116.559182703\n1 8.000000000 40.440431298 116.559558213\n1 9.000000000 40.440549698 116.560105383\n1 10.000000000 40.440176125 116.560408473\n1 11.000000000 40.439761723 116.560641825\n1 12.000000000 40.439355483 116.560869813\n1 13.000000000 40.438936993 116.561076343\n1 14.000000000 40.438542997 116.561339200\n1 15.000000000 40.438102046 116.561331153\n1 16.000000000 40.437663133 116.561309695\n1 17.000000000 40.437285461 116.561594009\n1 18.000000000 40.436911871 116.561926603\n1 19.000000000 40.436474991 116.562036574\n1 20.000000000 40.436029943 116.562036574\n1 21.000000000 40.435593059 116.561907828\n1 22.000000000 40.435207209 116.562205553\n1 23.000000000 40.434921394 116.562640071\n1 24.000000000 40.434651909 116.563096046\n1 25.000000000 40.434335468 116.563498378\n1 26.000000000 40.433945528 116.563707590\n1 27.000000000 40.433561711 116.563943624\n1 28.000000000 40.433163600 116.564174294\n1 29.000000000 40.432751196 116.563938260\n1 30.000000000 40.432320415 116.563938260\n1 31.000000000 40.431961088 116.564254761\n1 32.000000000 40.431565010 116.564517617\n1 33.000000000 40.431128096 116.564512253\n1 34.000000000 40.430764680 116.564828753",
+        "interval": "1000",
+        "polygons": []
+      }
+    ],
+    "activeNodeGroupId": "great-wall-mutianyu-mobile",
+    "experimental3d": false,
+    "projectExtras": {
+      "controls": {
+        "nodeIdInput": "1",
+        "intervalInput": "1000",
+        "originModeSelect": "first",
+        "originLatInput": "",
+        "originLngInput": "",
+        "originAltInput": "0",
+        "circleRadiusSelect": "50",
+        "circleRadiusCustomInput": "10",
+        "autoNodeIds": false,
+        "experimental3d": false,
+        "simExportSelect": "cooja",
+        "enablePathLossProfile": false,
+        "propagationEnvironmentSelect": "urban",
+        "propagationProfileSelect": "urban-los-site-general",
+        "propagationRangeInput": "50",
+        "propagationInterferenceRangeInput": "100",
+        "propagationSuccessRatioInput": "1",
+        "propagationRxSensitivityInput": "-100",
+        "propagationRssiInflectionInput": "-92",
+        "propagationPathLossExponentInput": "2.07",
+        "propagationShadowingInput": "3",
+        "propagationTimeVariationSelect": "false",
+        "propagationSeedInput": "123456",
+        "newNodeGroupType": "fixed",
+        "searchInput": "Mutianyu Great Wall, China",
+        "playbackSpeed": "1",
+        "playbackLoop": false
+      },
+      "mode": "maps",
+      "scanDirection": "horizontal",
+      "map": {
+        "lat": 40.4370085515,
+        "lng": 116.5592,
+        "zoom": 15,
+        "basemap": "street"
+      },
+      "groupsCollapsed": false,
+      "polygonDraft": [],
+      "elevations": [],
+      "csc": null,
+      "playback": {
+        "time": 0,
+        "expanded": false
+      },
+      "projectName": "great-wall-mutianyu",
+      "details": {
+        "compatibility": false,
+        "propagation": false
+      }
+    }
+  }
+}

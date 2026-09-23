@@ -46,5 +46,19 @@
     const delta=((b.lng-a.lng+540)%360)-180;
     return {lat:a.lat+(b.lat-a.lat)*f,lng:((a.lng+delta*f+540)%360)-180,z:(a.z||0)+((b.z||0)-(a.z||0))*f};
   }
-  return {FORMAT,VERSION,encode,decode,validate,tracks,atTime};
+  function segmentIndex(points,t){let i=0;while(i+1<points.length&&points[i+1].time<=t)i++;return i;}
+  function distance(a,b,use3d=false){
+    const rad=Math.PI/180,dlat=(b.lat-a.lat)*rad,dlng=(b.lng-a.lng)*rad;
+    const h=Math.sin(dlat/2)**2+Math.cos(a.lat*rad)*Math.cos(b.lat*rad)*Math.sin(dlng/2)**2;
+    const horizontal=2*6371000*Math.asin(Math.sqrt(Math.min(1,h)));
+    return Math.hypot(horizontal,use3d?(b.z||0)-(a.z||0):0);
+  }
+  function averageSpeed(points,use3d=false){
+    if(points.length<2)return null;
+    tracks([{type:'mobile',name:'Route',points}]);
+    let length=0;
+    for(let i=1;i<points.length;i++)length+=distance(points[i-1],points[i],use3d);
+    return length/(points[points.length-1].time-points[0].time);
+  }
+  return {FORMAT,VERSION,encode,decode,validate,tracks,atTime,segmentIndex,distance,averageSpeed};
 });
