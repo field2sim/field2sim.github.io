@@ -13,7 +13,12 @@
       const batch=unique.slice(start,start+100);
       const response=await fetchImpl(endpoint,{method:'POST',credentials:'omit',headers:{'Content-Type':'application/json'},body:JSON.stringify({locations:batch.map(p=>({latitude:p.lat,longitude:p.lng}))}),signal});
       const body=await response.json().catch(()=>null);
-      if(!response.ok){const retry=Number(response.headers.get('Retry-After'));throw Error(`Elevation service: HTTP ${response.status}${retry>0?`. Try again after ${retry} seconds`:''}.`);}
+      if(!response.ok){
+        const retry=Number(response.headers.get('Retry-After'));
+        const unavailable=body?.error?.code==='upstream_unavailable'||[502,503,504].includes(response.status);
+        const detail=unavailable?' The elevation service could not obtain data from its provider. Coordinates are unchanged. Try switching 3D off and on again later.':'';
+        throw Error(`Elevation service: HTTP ${response.status}.${detail}${retry>0?` Try again after ${retry} seconds.`:''}`);
+      }
       if(!Array.isArray(body?.results)||body.results.length!==batch.length||body.metadata?.dataset!=='mapzen'||body.metadata?.units!=='metres')throw Error('Invalid elevation response.');
       body.results.forEach((r,i)=>{
         if(r.latitude!==batch[i].lat||r.longitude!==batch[i].lng||!((r.status==='ok'&&Number.isFinite(r.elevation_m))||(r.status==='no_data'&&r.elevation_m===null))||!Number.isFinite(Date.parse(r.fetched_at)))throw Error('Invalid elevation result.');

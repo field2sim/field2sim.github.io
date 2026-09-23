@@ -2303,10 +2303,17 @@
       ctx.save();
       for(const group of nodeGroups){
         if(group.id===activeNodeGroupId)continue;
-        ctx.strokeStyle=group.type==='mobile'?'#7956B5':'#468b79';ctx.fillStyle=ctx.strokeStyle;ctx.globalAlpha=group.type==='mobile'?.7:.55;
+        ctx.strokeStyle=group.type==='mobile'?'#D500FF':'#39FF14';ctx.fillStyle=ctx.strokeStyle;ctx.globalAlpha=group.type==='mobile'?1:.95;
         ctx.lineWidth=1.5;
         if(group.type==='mobile'&&group.points.length){ctx.beginPath();group.points.forEach((p,i)=>{const q=map.latLngToContainerPoint([p.lat,p.lng]);if(i)ctx.lineTo(q.x,q.y);else ctx.moveTo(q.x,q.y)});ctx.stroke();}
-        for(const p of group.points){const q=map.latLngToContainerPoint([p.lat,p.lng]);ctx.beginPath();ctx.arc(q.x,q.y,7,0,2*Math.PI);ctx.fill();ctx.font='12px Arial';ctx.fillText(String(p.nodeId),q.x+10,q.y);}
+        for(const p of group.points){
+          const q=map.latLngToContainerPoint([p.lat,p.lng]);
+          ctx.beginPath();ctx.arc(q.x,q.y,7,0,2*Math.PI);ctx.fill();
+          const label=String(p.nodeId);
+          const labelGap=3+Math.max(0,label.length-1)*2;
+          ctx.font='12px Arial';ctx.textAlign='left';ctx.textBaseline='middle';
+          ctx.fillText(label,q.x+7+labelGap,q.y);
+        }
       }
       ctx.restore();
       const rPx = nodeRadiusPx(); let index=1; 
