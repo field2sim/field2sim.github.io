@@ -245,6 +245,14 @@
     }
     .leaflet-container .leaflet-control-attribution { font-size: 10px; }
     .basemap-note { max-width: 220px; margin-top: 4px; font-size: 10px; color: #555; }
+    /* Basemap control: compact (title + selected background) until hovered or keyboard-focused; stays open while the key form is shown. */
+    #basemapControl legend { padding: 0; font-weight: 600; }
+    #basemapControl:not(:hover):not(:has(:focus-visible)):not(:has(#basemapKeyForm:not([hidden]))) fieldset label:not(:has(input:checked)),
+    #basemapControl:not(:hover):not(:has(:focus-visible)):not(:has(#basemapKeyForm:not([hidden]))) .basemap-note { display: none; }
+    #basemapControl:not(:hover):not(:has(:focus-visible)):not(:has(#basemapKeyForm:not([hidden]))) fieldset input {
+      position: absolute; width: 1px; height: 1px; margin: 0; opacity: 0; pointer-events: none;
+    }
+    #basemapControl:not(:hover):not(:has(:focus-visible)):not(:has(#basemapKeyForm:not([hidden]))) fieldset label { cursor: pointer; }
   </style>
 </head>
 <body>
