@@ -2,6 +2,11 @@
 
 > From field context to reproducible network-simulation scenarios.
 
+<p align="center">
+  <a href="media/screenshot-polygon-deployment.jpg"><img src="media/screenshot-polygon-deployment.jpg" alt="Field2Sim interface with a generated triangular sensor lattice and a mobile scan path over satellite imagery" width="100%"></a>
+</p>
+<p align="center"><sub>Saint-Émilion example project: a 30-m triangular lattice (76 static nodes) and a horizontal scan path (37 waypoints) generated with Polygon Mode next to the example's vineyard sensors and collector route. Satellite (Esri) background; click for the 3840×2160 image.</sub></p>
+
 Field2Sim is a client-side, browser-based editor that translates field context into simulator-ready WSN and IoT scenario artifacts. Here, *field context* means deployment-relevant geographic information and user-supplied or citation-backed propagation assumptions; it does not imply automated site surveying or channel-model inference.
 
 - **Live application:** https://field2sim.github.io/
@@ -14,6 +19,19 @@ The bottom-left background selector offers **Street**, **Satellite (EOX)**, **Sa
 Unconfigured local installations require your own provider API key. The hosted site can supply shared Esri and MapTiler keys through its deployment configuration. For manual configuration, select the layer and enter the key in the map control; the current background stays visible until access is validated. Manually entered keys are held only in the open page, are sent to the chosen provider, and are not saved in browser storage, source files, or scenario exports. Reloading clears manually entered keys. Use browser/map-service keys with appropriate allowed-origin restrictions for your local address and deployment domain. Provider quotas and account terms apply; availability depends on your provider plan and remaining quota. Esri source credits and MapTiler source credits/logo are displayed with their respective layers. See [Esri access and pricing](https://location.arcgis.com/pricing/) and [MapTiler accounts and pricing](https://www.maptiler.com/cloud/pricing/). Image detail varies by location and provider.
 
 Satellite attribution: **EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2025)**. The imagery is available for non-commercial use under CC BY-NC-SA 4.0; commercial use requires a suitable EOX license. These imagery terms are separate from Field2Sim's software license. Keep the displayed attribution in screenshots and videos. See the [EOX license summary](https://cloudless.eox.at/documentation/license), [resolution documentation](https://cloudless.eox.at/documentation/introduction), and [EOX::Maps service conditions](https://maps.eox.at/). The public tile service is rate-limited and has no availability guarantee; Street remains available as an alternative.
+
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%"><a href="media/screenshot-drone-route.jpg"><img src="media/screenshot-drone-route.jpg" alt="Inspection-drone route and static monitoring sensors along the Great Wall at Mutianyu on satellite imagery"></a></td>
+    <td width="50%"><a href="media/screenshot-ns3-export.jpg"><img src="media/screenshot-ns3-export.jpg" alt="Central Park example with a mobile collector route and the ns-3 Ns2MobilityHelper export preview"></a></td>
+  </tr>
+  <tr>
+    <td><sub>Great Wall example: a 35-waypoint inspection-drone route and six monitoring sensors (Satellite, Esri).</sub></td>
+    <td><sub>Central Park example converted to an ns-3 <code>Ns2MobilityHelper</code> trace; the preview records the axis convention and node mapping (Street, OpenStreetMap).</sub></td>
+  </tr>
+</table>
 
 ## Run locally with Python
 
